@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>FollowUP – Buyer Persona</title>
+<link rel="icon" href="https://media.licdn.com/dms/image/v2/D4E0BAQFvVz5clxj08w/company-logo_200_200/B4EZXyyjtSG0AI-/0/1743535094994/followupcx_logo?e=2147483647&v=beta&t=FVh7RUdEGOzXdcCx5TXmlVWeh3MfenVzm9HDifB-B0k" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+  <style>
+    :root{
+      --brand:#0f6eea; --brand-600:#0a55b6; --ink:#0f172a; --muted:#637488;
+      --bg:#f5f7fb; --card:#ffffff; --chip:#e6eefc; --radius:14px; --shadow:0 6px 24px rgba(15,23,42,.06);
+      --sidebar-w:264px; --topbar-h:56px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial; color:var(--ink); background:var(--bg); display:flex;}
+
+    .shell{display:flex; width:100%; min-height:100svh; overflow:hidden}
+    .sidebar{
+      width:var(--sidebar-w); min-width:var(--sidebar-w);
+      background:linear-gradient(180deg, var(--brand), var(--brand-600));
+      color:#fff; padding:18px; display:flex; flex-direction:column; gap:12px; z-index:19;
+      transition:transform .2s ease;
+    }
+    .brand{display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:800}
+    .nav{margin-top:10px; display:flex; flex-direction:column; gap:6px}
+    .nav a{color:#fff; text-decoration:none; padding:10px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; opacity:.92}
+    .nav a[aria-current="page"], .nav a:hover{background:rgba(255,255,255,.14); opacity:1}
+    .sidebar small{opacity:.8}
+
+    .main{flex:1; display:flex; flex-direction:column; min-width:0;}
+    .topbar{display:none; position:sticky; top:0; z-index:20; height:var(--topbar-h);
+      background:linear-gradient(180deg, var(--brand), var(--brand-600)); color:#fff; padding:0 12px; align-items:center; gap:8px;}
+    .topbar h1{font-size:16px; margin:0; font-weight:800}
+    .hamb{appearance:none;border:0;background:transparent;color:#fff;font-size:22px;line-height:1; padding:8px 10px; border-radius:10px; cursor:pointer}
+
+    .page{flex:1; overflow:auto; overflow-x:hidden; padding:18px; position:relative; min-width:0;}
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; width:100%}
+    .muted{color:var(--muted)}
+
+    /* Filtros */
+    .filters-bar{ position:sticky; top:0; z-index:5; background:var(--bg); margin-bottom:14px; }
+    details.filters{width:100%; border:1px solid #e7ecf7; border-radius:12px; background:#fff; box-shadow:var(--shadow);}
+    details.filters > summary{list-style:none; cursor:pointer; padding:12px 14px; font-weight:700; color:#173f82; display:flex; align-items:center; justify-content:space-between;}
+    details.filters > summary::-webkit-details-marker{display:none}
+    details.filters[open] > summary{border-bottom:1px solid #e7ecf7}
+    .filters-inner{padding:12px}
+    .filters-grid{display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items:end;}
+    .field{display:flex; flex-direction:column; gap:6px}
+    label{font-size:12px; color:var(--muted)}
+    select,button.export{appearance:none; width:100%; padding:12px 12px; border-radius:10px; background:#fff; border:1px solid #e7ecf7; outline:none; color:var(--ink); font-size:14px; min-height:40px;}
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{background:var(--chip); color:#17438a; padding:6px 10px; border-radius:999px; font-size:12px}
+
+    /* Grillas */
+    .section{margin-top:16px; display:grid; gap:14px; grid-template-columns:repeat(12,1fr)}
+    .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}
+    @media (max-width:1200px){ .span-8,.span-6,.span-4{grid-column:span 12} }
+
+    /* Charts */
+    .chart{width:100%; max-width:100%; min-height:320px; height:clamp(300px, 48vh, 420px)}
+
+    @media (max-width: 900px){
+      .topbar{display:flex}
+      .sidebar{position:fixed; inset:0 auto 0 0; height:100svh; transform:translateX(-100%); box-shadow: 18px 0 40px rgba(4,14,46,.2);}
+      .sidebar.open{transform:translateX(0)}
+      .page{padding:14px}
+      .section{grid-template-columns: 1fr}
+    }
+    @media (min-width:901px){
+      details.filters > summary{display:none}
+      details.filters[open] > .filters-inner{padding-top:0}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" id="shell">
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Módulos de reportes">
+      <div class="brand" aria-label="FollowUP">
+        <span>FollowUP Reports</span>
+        <button class="hamb" id="closeNav" aria-label="Ocultar menú">✕</button>
+      </div>
+      <nav class="nav">
+        <a id="lnk-bienvenida" href="Bienvenida.html">🏠 Bienvenida</a>
+        <a id="lnk-dashboard" href="Dashboard.html">📊 Dashboard</a>
+        <a id="lnk-recorridos" href="Recorridos.html">🗺️ Recorridos</a>
+        <a id="lnk-buyer" href="Buyer.html" aria-current="page">🧑‍🤝‍🧑 Buyer Persona</a>
+        <a id="lnk-staff" href="Staff.html">👤 Staff</a>
+        <a id="lnk-comercial" href="Comercial.html" >📈 Comercial</a>
+      </nav>
+      <div style="margin-top:auto"><small>Aqui va tu marca</small></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <button class="hamb" id="openNav" aria-label="Abrir menú">☰</button>
+        <h1>Buyer Persona</h1>
+      </div>
+
+      <main class="page">
+        <!-- Filtros -->
+        <header class="filters-bar" role="region" aria-label="Filtros globales">
+          <details class="filters card" id="filters" open>
+            <summary>Filtros ▾</summary>
+            <div class="filters-inner">
+              <div class="filters-grid">
+                <div class="field">
+                  <label for="f-fecha">Rango de fechas</label>
+                  <select id="f-fecha">
+                    <option value="7">Últimos 7 días</option>
+                    <option value="14" selected>Últimos 14 días</option>
+                    <option value="30">Últimos 30 días</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-genero">Género</label>
+                  <select id="f-genero">
+                    <option value="all" selected>Todos</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Masculino">Masculino</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-edad">Rango etario</label>
+                  <select id="f-edad">
+                    <option value="all" selected>Todos</option>
+                    <option value="Niño">Niño</option>
+                    <option value="Adulto Joven">Adulto Joven</option>
+                    <option value="Adulto">Adulto</option>
+                    <option value="Senior">Senior</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-zona">Zona</label>
+                  <select id="f-zona">
+                    <option value="all" selected>Todas</option>
+                    <option>Pasillo</option><option>Vitrina</option><option>Tienda</option>
+                    <option>Perfumería</option><option>Zapatería</option><option>Joyería</option>
+                    <option>Carteras</option><option>Tane</option><option>Caja</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-persona">Tipo de grupo</label>
+                  <select id="f-persona">
+                    <option value="all" selected>Todos</option>
+                    <option value="Solo">Solo</option>
+                    <option value="Pareja">Pareja</option>
+                    <option value="Amigos">Amigos</option>
+                    <option value="Familia">Familia</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Vista</label>
+                  <div class="chips">
+                    <span class="chip">Tu espacio comercial</span>
+                    <span class="chip" id="chip-rango">14 días</span>
+                    <button class="export" id="btn-export">Exportar CSV (dataset filtrado)</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+        </header>
+
+        <!-- BUYER -->
+        <section id="buyer" class="view active" aria-label="Buyer Persona">
+          <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;">
+            <h2 style="margin:0">Buyer Persona</h2>
+            <span class="chip">Conteos por tipo de grupo y comportamiento</span>
+          </div>
+
+          <div class="section">
+            <div class="card span-4">
+              <h3 style="margin:0 0 10px">Tipos de grupo</h3>
+              <div id="ch-persona-pie" class="chart"></div>
+            </div>
+            <div class="card span-8">
+              <h3 style="margin:0 0 10px">Zonas preferidas por tipo de grupo</h3>
+              <div id="ch-persona-zonas" class="chart"></div>
+            </div>
+            <div class="card span-12">
+              <h3 style="margin:0 0 10px">Tiempo en tienda vs. Zonas visitadas (por grupo)</h3>
+              <p class="muted" style="margin:0 0 8px">Cada punto es el promedio de un tipo de grupo (datos dummy realistas).</p>
+              <div id="ch-scatter" class="chart"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const safe = fn => (...args) => { try { return fn(...args); } catch(e){ console.error(e); } };
+
+    window.addEventListener('DOMContentLoaded', safe(() => {
+      /* ====== Datos sintéticos ====== */
+      const rand = (seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280)(42);
+      const genders = ["Femenino", "Masculino"];
+      const ages = ["Niño", "Adulto Joven", "Adulto", "Senior"];
+      const zones = ["Pasillo","Vitrina","Tienda","Perfumería","Zapatería","Joyería","Carteras","Tane","Caja"];
+      const personas = ["Solo","Pareja","Amigos","Familia"];
+      function randomHour(){ const r = rand(); if (r < 0.15) return 10 + Math.floor(rand()*3); if (r < 0.55) return 13 + Math.floor(rand()*3); if (r < 0.80) return 16 + Math.floor(rand()*2); return 18 + Math.floor(rand()*3); }
+      const ALL_VISITS = (() => {
+        const visits = [];
+        for (let d=0; d<30; d++){
+          const dayBase = 55 + Math.floor(rand()*65);
+          for (let i=0; i<dayBase; i++){
+            const g = genders[Math.floor(rand()*genders.length)];
+            const a = ages[Math.floor(Math.pow(rand(), .6)*ages.length)];
+            const p = personas[Math.floor(Math.pow(rand(), .85)*personas.length)];
+            const unique = rand() > 0.18;
+            const len = 3 + Math.floor(rand()*5);
+            const path = [];
+            let current = ["Pasillo","Vitrina","Tienda"][Math.floor(rand()*3)];
+            for (let k=0; k<len; k++){
+              path.push(current);
+              const nextCandidates = zones.filter(z => z !== current);
+              current = nextCandidates[Math.floor(rand()*nextCandidates.length)];
+            }
+            const dwell = 7 + Math.round(rand()*26) + (a==="Niño"? -2: a==="Senior"? +3: 0) + (p==="Familia"? +2: 0);
+            const startHour = randomHour();
+            visits.push({day:d, hour:startHour, gender:g, age:a, persona:p, path, dwell:Math.max(4,dwell), unique});
+          }
+        }
+        return visits;
+      })();
+
+      /* ====== Estado y helpers ====== */
+      const $ = s => document.querySelector(s);
+      const state = { range: 14, genero:"all", edad:"all", zona:"all", persona:"all" };
+      const updateChips = () => {
+        $("#chip-rango") && ($("#chip-rango").textContent = `${state.range} días`);
+      };
+      function getFiltered(){
+        const start = 30 - state.range;
+        return ALL_VISITS.filter(v =>
+          v.day>=start &&
+          (state.genero==="all" || v.gender===state.genero) &&
+          (state.edad==="all" || v.age===state.edad) &&
+          (state.zona==="all" || v.path.includes(state.zona)) &&
+          (state.persona==="all" || v.persona===state.persona)
+        );
+      }
+
+      /* ====== ECharts instances ====== */
+      let chPersonaPie=null, chPersonaZonas=null, chScatter=null;
+
+      function ensureBuyerCharts(){
+        chPersonaPie   = chPersonaPie   || echarts.init(document.getElementById("ch-persona-pie"));
+        chPersonaZonas = chPersonaZonas || echarts.init(document.getElementById("ch-persona-zonas"));
+        chScatter      = chScatter      || echarts.init(document.getElementById("ch-scatter"));
+      }
+
+      /* ====== Buyer Persona render ====== */
+      function renderBuyer(){
+        ensureBuyerCharts();
+        const data = getFiltered();
+        const zonesAll = ["Pasillo","Vitrina","Tienda","Perfumería","Zapatería","Joyería","Carteras","Tane","Caja"];
+
+        // Pie: distribución por tipo de grupo
+        const pCounts = personas.map(p=>({name:p, value:data.filter(v=>v.persona===p).length}));
+        chPersonaPie.setOption({
+          tooltip:{trigger:'item'},
+          series:[{type:'pie', radius:['40%','70%'], data:pCounts, label:{formatter:'{b}: {d}%'}}]
+        });
+
+        // Barras apiladas: zonas top por grupo
+        const globalCounts = Object.fromEntries(zonesAll.map(z=>[z,0]));
+        data.forEach(v=>v.path.forEach(z=>globalCounts[z]++));
+        const topGlobal = Object.entries(globalCounts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(t=>t[0]);
+
+        chPersonaZonas.setOption({
+          tooltip:{trigger:'axis'},
+          grid:{left:60,right:16,top:20,bottom:28},
+          legend:{top:0},
+          xAxis:{type:'category', data:topGlobal},
+          yAxis:{type:'value'},
+          series: personas.map(p=>{
+            const sub = data.filter(v=>v.persona===p);
+            const c = Object.fromEntries(zonesAll.map(z=>[z,0]));
+            sub.forEach(v=>v.path.forEach(z=>c[z]++));
+            return {type:'bar', name:p, stack:'s1', emphasis:{focus:'series'}, data: topGlobal.map(z=>c[z])};
+          })
+        });
+
+        // Scatter: tiempo vs zonas por grupo (promedios)
+        const scatterSeries = personas.map(p=>{
+          const sub = data.filter(v=>v.persona===p);
+          const avgTime = sub.length ? sub.reduce((s,v)=>s+v.dwell,0)/sub.length : 0;
+          const avgZones = sub.length ? sub.reduce((s,v)=>s+new Set(v.path).size,0)/sub.length : 0;
+          const volume = sub.length;
+          return {name:p, value:[avgZones, avgTime, volume]};
+        });
+        chScatter.setOption({
+          tooltip:{formatter: p => { const [z,t,vol]=p.value; return `${p.seriesName}<br/>Zonas: ${z.toFixed(2)}<br/>Tiempo: ${t.toFixed(1)} min<br/>Muestras: ${vol}`; }},
+          grid:{left:46,right:16,top:20,bottom:36},
+          xAxis:{name:'Zonas promedio', type:'value', min:1, max:7},
+          yAxis:{name:'Tiempo en tienda (min)', type:'value', min:4},
+          series: personas.map(p=>{
+            const s = scatterSeries.find(x=>x.name===p);
+            return { type:'scatter', name:p, symbolSize: Math.max(10, Math.sqrt(s.value[2])*2), data:[s.value] }
+          })
+        });
+      }
+
+      /* ====== Export CSV ====== */
+      function exportCSV(){
+        const rows = getFiltered().map(v=>({ dia:v.day+1, hora:v.hour, genero:v.gender, edad:v.age, persona:v.persona, dwell:v.dwell, path:v.path.join('>') }));
+        const header = Object.keys(rows[0]||{dia:'',hora:'',genero:'',edad:'',persona:'',dwell:'',path:''}).join(',');
+        const body = rows.map(r=> Object.values(r).join(',')).join('\n');
+        const blob = new Blob([header+'\n'+body], {type:'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='palacio_centro_p1_dataset.csv'; a.click(); URL.revokeObjectURL(url);
+      }
+
+      /* ====== Drawer móvil / resize ====== */
+      const sidebar = document.getElementById('sidebar');
+      const openBtn = document.getElementById('openNav');
+      const closeBtn = document.getElementById('closeNav');
+      const filtersDetails = document.getElementById('filters');
+      const isMobile = () => window.matchMedia('(max-width:900px)').matches;
+
+      const forceResize = () => {
+        [chPersonaPie,chPersonaZonas,chScatter].filter(Boolean).forEach(c=>c.resize());
+      };
+      const openSidebar = safe(()=> { sidebar.classList.add('open'); setTimeout(forceResize, 60); });
+      const closeSidebar = safe(()=> { sidebar.classList.remove('open'); setTimeout(forceResize, 60); });
+      ['click','touchstart'].forEach(ev=>{
+        openBtn?.addEventListener(ev, openSidebar, {passive:true});
+        closeBtn?.addEventListener(ev, closeSidebar, {passive:true});
+      });
+      document.addEventListener('click', safe((e)=>{
+        if (!isMobile()) return;
+        if (sidebar.classList.contains('open') &&
+            !sidebar.contains(e.target) &&
+            !openBtn.contains(e.target)) {
+          sidebar.classList.remove('open');
+          setTimeout(forceResize, 60);
+        }
+      }), {passive:true});
+      filtersDetails.addEventListener('toggle', safe(()=> setTimeout(forceResize, 60)));
+      window.addEventListener('resize', safe(()=> setTimeout(forceResize, 30)));
+
+      /* ====== Eventos de filtros ====== */
+      ["f-fecha","f-genero","f-edad","f-zona","f-persona"].forEach(id=>{
+        document.getElementById(id).addEventListener('change', safe(()=>{
+          state.range = +document.getElementById("f-fecha").value;
+          state.genero = document.getElementById("f-genero").value;
+          state.edad = document.getElementById("f-edad").value;
+          state.zona = document.getElementById("f-zona").value;
+          state.persona = document.getElementById("f-persona").value;
+          document.getElementById("chip-rango").textContent = `${state.range} días`;
+          renderBuyer();
+          setTimeout(forceResize, 20);
+        }));
+      });
+
+      document.getElementById('btn-export').addEventListener('click', safe(exportCSV));
+
+      // Render inicial
+      requestAnimationFrame(safe(()=>{
+        document.getElementById("chip-rango").textContent = `${state.range} días`;
+        renderBuyer();
+        setTimeout(forceResize, 60);
+      }));
+    }));
+  })();
+  </script>
+</body>
+</html>

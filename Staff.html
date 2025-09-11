@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>FollowUP – Staff</title>
+   <link rel="icon" href="https://media.licdn.com/dms/image/v2/D4E0BAQFvVz5clxj08w/company-logo_200_200/B4EZXyyjtSG0AI-/0/1743535094994/followupcx_logo?e=2147483647&v=beta&t=FVh7RUdEGOzXdcCx5TXmlVWeh3MfenVzm9HDifB-B0k" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    :root{
+      --brand:#0f6eea; --brand-600:#0a55b6; --ink:#0f172a; --muted:#637488;
+      --ok:#16a34a; --warn:#ef4444; --bg:#f5f7fb; --card:#ffffff; --chip:#e6eefc;
+      --radius:14px; --shadow:0 6px 24px rgba(15, 23, 42, .06);
+      --kpi-gap:16px; --sidebar-w:264px; --topbar-h:56px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial; color:var(--ink); background:var(--bg); display:flex;}
+    .shell{display:flex; width:100%; min-height:100svh; overflow:hidden}
+    .sidebar{
+      width:var(--sidebar-w); min-width:var(--sidebar-w);
+      background:linear-gradient(180deg, var(--brand), var(--brand-600));
+      color:#fff; padding:18px; display:flex; flex-direction:column; gap:12px; z-index:19;
+      transition:transform .2s ease;
+    }
+    .brand{display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:800}
+    .nav{margin-top:10px; display:flex; flex-direction:column; gap:6px}
+    .nav a{color:#fff; text-decoration:none; padding:10px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; opacity:.92}
+    .nav a[aria-current="page"], .nav a:hover{background:rgba(255,255,255,.14); opacity:1}
+    .sidebar small{opacity:.8}
+
+    .main{flex:1; display:flex; flex-direction:column; min-width:0;}
+    .topbar{display:none; position:sticky; top:0; z-index:20; height:var(--topbar-h);
+      background:linear-gradient(180deg, var(--brand), var(--brand-600)); color:#fff; padding:0 12px; align-items:center; gap:8px;}
+    .topbar h1{font-size:16px; margin:0; font-weight:800}
+    .hamb{appearance:none;border:0;background:transparent;color:#fff;font-size:22px;line-height:1; padding:8px 10px; border-radius:10px; cursor:pointer}
+    .page{flex:1; overflow:auto; overflow-x:hidden; padding:18px; position:relative; min-width:0;}
+
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; width:100%; max-width:100%}
+    .filters-bar{ position:sticky; top:0; z-index:5; background:var(--bg); margin-bottom:14px; }
+    details.filters{width:100%; border:1px solid #e7ecf7; border-radius:12px; background:#fff; box-shadow:var(--shadow);}
+    details.filters > summary{list-style:none; cursor:pointer; padding:12px 14px; font-weight:700; color:#173f82; display:flex; align-items:center; justify-content:space-between;}
+    details.filters > summary::-webkit-details-marker{display:none}
+    details.filters[open] > summary{border-bottom:1px solid #e7ecf7}
+    .filters-inner{padding:12px}
+    .filters-grid{
+      display:grid; gap:10px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      align-items:end;
+    }
+    .field{display:flex; flex-direction:column; gap:6px}
+    label{font-size:12px; color:var(--muted)}
+    /* inputs regulares */
+    select, button.export{
+      appearance:none; width:100%; padding:12px 12px; border-radius:10px; background:#fff; border:1px solid #e7ecf7; outline:none; color:var(--ink); font-size:14px; min-height:40px;
+    }
+    /* checkbox visual y alineación */
+    .checkbox{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px; border:1px solid #e7ecf7; border-radius:10px;
+      min-height:40px; line-height:1.2;
+    }
+    .checkbox input{
+      appearance:auto; /* recupera el check nativo */
+      width:18px; height:18px; margin:0;
+      accent-color: var(--brand);
+      cursor:pointer;
+    }
+    .checkbox label{
+      cursor:pointer; color:var(--ink); font-size:14px;
+    }
+
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{background:var(--chip); color:#17438a; padding:6px 10px; border-radius:999px; font-size:12px; cursor:default}
+    .pill{background:#f1f5ff;border:1px solid #e3ecff;color:#173f82;border-radius:999px;padding:6px 10px;font-size:12px}
+
+    .card.title{display:flex; align-items:center; justify-content:space-between; padding:18px; gap:12px}
+    .kpis{display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--kpi-gap)}
+    .kpi{ padding:18px 18px 14px; border:1px solid #e7ecf7; border-radius:18px; box-shadow:0 10px 30px rgba(15,23,42,.08); }
+    .kpi h4{ margin:0 0 8px; font-size:14px; color:#4b5870; letter-spacing:.2px; }
+    .kpi .v{ font-size:38px; line-height:1; font-weight:900; letter-spacing:.2px; color:#111827; margin-bottom:6px;}
+    .delta{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; }
+    .delta.up{ color:#16a34a; } .delta.down{ color:#ef4444; }
+
+    .section{margin-top:16px; display:grid; gap:14px; grid-template-columns:repeat(12,1fr)}
+    .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}
+    @media (max-width:1200px){ .span-8,.span-6,.span-4{grid-column:span 12} }
+
+    .chart{width:100%; max-width:100%; min-height:320px; height:clamp(300px, 48vh, 420px)}
+    .chart.tall{min-height:420px; height:clamp(380px, 56vh, 520px)}
+    .muted{color:var(--muted)}
+
+    @media (max-width:900px){
+      .topbar{display:flex}
+      .sidebar{position:fixed; inset:0 auto 0 0; height:100svh; transform:translateX(-100%); box-shadow: 18px 0 40px rgba(4,14,46,.2);}
+      .sidebar.open{transform:translateX(0)}
+      .page{padding:14px}
+      .kpis{grid-template-columns: 1fr}
+      .section{grid-template-columns: 1fr}
+    }
+    @media (min-width:901px){
+      details.filters > summary{display:none}
+      details.filters[open] > .filters-inner{padding-top:0}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" id="shell">
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Módulos de reportes">
+      <div class="brand" aria-label="FollowUP">
+        <span>FollowUP Reports</span>
+        <button class="hamb" id="closeNav" aria-label="Ocultar menú">✕</button>
+      </div>
+      <nav class="nav">
+        <a id="lnk-bienvenida" href="Bienvenida.html">🏠 Bienvenida</a>
+        <a id="lnk-dashboard" href="Dashboard.html">📊 Dashboard</a>
+        <a id="lnk-recorridos" href="Recorridos.html" >🗺️ Recorridos</a>
+        <a id="lnk-buyer" href="Buyer.html" >🧑‍🤝‍🧑 Buyer Persona</a>
+        <a id="lnk-staff" href="Staff.html" aria-current="page">👤 Staff</a>
+        <a id="lnk-comercial" href="Comercial.html" >📈 Comercial</a>
+      </nav>
+      <div style="margin-top:auto"><small>Tu espacio comercial</small></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <button class="hamb" id="openNav" aria-label="Abrir menú">☰</button>
+        <h1>Staff</h1>
+      </div>
+
+      <main class="page">
+        <header class="filters-bar" role="region" aria-label="Filtros Staff">
+          <details class="filters card" id="filters" open>
+            <summary>Filtros ▾</summary>
+            <div class="filters-inner">
+              <div class="filters-grid">
+                <div class="field">
+                  <label for="f-fecha">Rango de fechas</label>
+                  <select id="f-fecha">
+                    <option value="7">Últimos 7 días</option>
+                    <option value="14" selected>Últimos 14 días</option>
+                    <option value="30">Últimos 30 días</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-zona">Zona</label>
+                  <select id="f-zona">
+                    <option value="all" selected>Todas</option>
+                    <option>Pasillo</option><option>Vitrina</option><option>Tienda</option>
+                    <option>Perfumería</option><option>Zapatería</option><option>Joyería</option>
+                    <option>Carteras</option><option>Tane</option><option>Caja</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>&nbsp;</label>
+                  <div class="checkbox">
+                    <input id="f-exclude-ss" type="checkbox" />
+                    <label for="f-exclude-ss">Excluir interacciones Staff-Staff</label>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Vista</label>
+                  <div class="chips">
+                    <span class="chip" id="chip-rango">14 días</span>
+                    <span class="chip" id="chip-zona">Todas</span>
+                    <button class="export" id="btn-export">Exportar CSV (dataset filtrado)</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+        </header>
+
+        <section class="view active">
+          <div class="card title" style="margin-bottom:16px;">
+            <h2 style="margin:0">Reporte de Staff</h2>
+            <span class="pill">Efectividad, interacciones por día y por zona</span>
+          </div>
+
+          <div class="kpis" role="region" aria-label="Indicadores Clave">
+            <div class="card kpi"><h4>Efectividad del Staff</h4><div class="v" id="kpi-eff">–</div><div class="delta up" id="kpi-eff-note">–</div></div>
+            <div class="card kpi"><h4>Tiempo con Clientes</h4><div class="v" id="kpi-time-cs">–</div><div class="delta up" id="kpi-time-cs-note">–</div></div>
+            <div class="card kpi"><h4>Tiempo Staff-Staff</h4><div class="v" id="kpi-time-ss">–</div><div class="delta down" id="kpi-time-ss-note">–</div></div>
+            <div class="card kpi"><h4>Interacciones C-S</h4><div class="v" id="kpi-cs">–</div><div class="delta up" id="kpi-cs-note">–</div></div>
+          </div>
+
+          <div class="section">
+            <div class="card span-8"><h3 style="margin:0 0 10px">Interacciones por día (apilado)</h3><div id="ch-byday" class="chart"></div></div>
+            <div class="card span-4"><h3 style="margin:0 0 10px">Efectividad por zona (%)</h3><div id="ch-eff-zone" class="chart"></div></div>
+
+            <div class="card span-6"><h3 style="margin:0 0 10px">Interacciones por zona (apilado)</h3><div id="ch-byzone" class="chart"></div></div>
+            <div class="card span-6"><h3 style="margin:0 0 10px">Efectividad por colaborador</h3><p class="muted" style="margin:0 0 6px">X: clientes únicos atendidos · Y: % efectividad · Tamaño: minutos con clientes</p><div id="ch-scatter" class="chart"></div></div>
+
+            <div class="card span-12">
+              <h3 style="margin:0 0 8px">Definición de Efectividad</h3>
+              <p class="muted" style="margin:0">Efectividad = tiempo <b>Staff↔Cliente</b> / (tiempo <b>Staff↔Cliente</b> + tiempo <b>Staff↔Staff</b>). El filtro “Excluir Staff-Staff” remueve esas interacciones de las visualizaciones y del denominador.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const safe = fn => (...a) => { try{ return fn(...a);}catch(e){ console.error(e);} };
+
+    window.addEventListener('DOMContentLoaded', safe(() => {
+      /* ===== Datos sintéticos ===== */
+      const rand = (seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280)(77);
+      const zones = ["Pasillo","Vitrina","Tienda","Perfumería","Zapatería","Joyería","Carteras","Tane","Caja"];
+      const staff = Array.from({length:14}, (_,i)=> "S"+String(i+1).padStart(2,'0'));
+
+      // Generamos 30 días de interacciones por zona y colaborador
+      const ALL = []; // {day, zone, type:'SS'|'CS'|'CC', count, minutes, staffId, customers}
+      for(let d=0; d<30; d++){
+        for(const z of zones){
+          const base = 10 + Math.floor(rand()*35); // intensidad por zona/día
+          const cs = base + Math.floor(rand()*30);     // Cliente-Staff
+          const ss = Math.max(2, Math.floor(base*0.4 + rand()*10));  // Staff-Staff
+          const cc = Math.max(5, Math.floor(base*0.6 + rand()*20));  // Cliente-Cliente
+
+          // Distribuimos por staff aleatoriamente
+          for(let i=0;i<cs;i++){
+            const s = staff[Math.floor(rand()*staff.length)];
+            const minutes = 2 + Math.floor(rand()*5); // 2-6 min
+            const customers = 1 + (rand()>0.8 ? 1:0);
+            ALL.push({day:d, zone:z, type:'CS', count:1, minutes, staffId:s, customers});
+          }
+          for(let i=0;i<ss;i++){
+            const s = staff[Math.floor(rand()*staff.length)];
+            const minutes = 1 + Math.floor(rand()*3); // 1-3 min
+            ALL.push({day:d, zone:z, type:'SS', count:1, minutes, staffId:s, customers:0});
+          }
+          for(let i=0;i<cc;i++){
+            const minutes = 1 + Math.floor(rand()*2);
+            ALL.push({day:d, zone:z, type:'CC', count:1, minutes, staffId:null, customers:2});
+          }
+        }
+      }
+
+      /* ===== Estado / helpers ===== */
+      const $ = s => document.querySelector(s);
+      const state = { range:14, zone:'all', excludeSS:false };
+      const updateChips = ()=>{
+        $("#chip-rango").textContent = `${state.range} días`;
+        $("#chip-zona").textContent = state.zone==='all' ? 'Todas' : state.zone;
+      };
+      function getFiltered(){
+        const start = 30 - state.range;
+        return ALL.filter(r =>
+          r.day >= start &&
+          (state.zone==='all' || r.zone===state.zone) &&
+          (state.excludeSS ? r.type!=='SS' : true)
+        );
+      }
+      function sum(arr, sel){ return arr.reduce((s,x)=> s + (sel? sel(x): x), 0); }
+
+      /* ===== ECharts ===== */
+      const chByDay = echarts.init(document.getElementById('ch-byday'));
+      const chByZone = echarts.init(document.getElementById('ch-byzone'));
+      const chEffZone = echarts.init(document.getElementById('ch-eff-zone'));
+      const chScatter = echarts.init(document.getElementById('ch-scatter'));
+
+      function render(){
+        updateChips();
+        const data = getFiltered();
+
+        // KPIs
+        const tCS = sum(data.filter(x=>x.type==='CS'), x=>x.minutes);
+        const tSS_all = sum(ALL.filter(x => x.type==='SS' && (state.zone==='all'||x.zone===state.zone) && x.day >= (30-state.range)), x=>x.minutes);
+        const tSS = state.excludeSS ? 0 : tSS_all;
+        const eff = tCS / Math.max(1, (tCS + tSS));
+        const csCount = data.filter(x=>x.type==='CS').length;
+
+        $("#kpi-eff").textContent = (eff*100).toFixed(1)+"%";
+        $("#kpi-eff-note").textContent = state.excludeSS ? "Denominador sin SS" : "Incluye SS";
+        $("#kpi-time-cs").textContent = Math.round(tCS)+" min";
+        $("#kpi-time-cs-note").textContent = "Staff↔Cliente";
+        $("#kpi-time-ss").textContent = Math.round(tSS)+" min";
+        $("#kpi-time-ss-note").textContent = state.excludeSS ? "Excluido" : "Staff↔Staff";
+        $("#kpi-cs").textContent = csCount.toLocaleString("es-MX");
+        $("#kpi-cs-note").textContent = "Interacciones C-S";
+
+        // ===== Interacciones por día (stacked)
+        const days = Array.from({length:state.range}, (_,i)=>30-state.range+i);
+        const byDay = d => data.filter(x=>x.day===d);
+        const ssSeries = days.map(d => byDay(d).filter(x=>x.type==='SS').length);
+        const csSeries = days.map(d => byDay(d).filter(x=>x.type==='CS').length);
+        const ccSeries = days.map(d => byDay(d).filter(x=>x.type==='CC').length);
+        chByDay.setOption({
+          tooltip:{trigger:'axis'},
+          legend:{top:0, data:['Staff-Staff','Cliente-Staff','Cliente-Cliente']},
+          grid:{left:40,right:18,top:30,bottom:28},
+          xAxis:{type:'category', data:days.map(d=>"D"+(d+1))},
+          yAxis:{type:'value'},
+          series:[
+            {name:'Staff-Staff', type:'bar', stack:'i', data:ssSeries},
+            {name:'Cliente-Staff', type:'bar', stack:'i', data:csSeries},
+            {name:'Cliente-Cliente', type:'bar', stack:'i', data:ccSeries},
+          ]
+        });
+
+        // ===== Interacciones por zona (stacked horizontal)
+        const zonesList = state.zone==='all'? zones : [state.zone];
+        const zoneAgg = z => data.filter(x=>x.zone===z);
+        const ssZ = zonesList.map(z => zoneAgg(z).filter(x=>x.type==='SS').length);
+        const csZ = zonesList.map(z => zoneAgg(z).filter(x=>x.type==='CS').length);
+        const ccZ = zonesList.map(z => zoneAgg(z).filter(x=>x.type==='CC').length);
+        chByZone.setOption({
+          tooltip:{trigger:'axis'},
+          legend:{top:0, data:['Staff-Staff','Cliente-Staff','Cliente-Cliente']},
+          grid:{left:90,right:16,top:30,bottom:28},
+          xAxis:{type:'value'},
+          yAxis:{type:'category', data:zonesList},
+          series:[
+            {name:'Staff-Staff', type:'bar', stack:'z', data:ssZ},
+            {name:'Cliente-Staff', type:'bar', stack:'z', data:csZ},
+            {name:'Cliente-Cliente', type:'bar', stack:'z', data:ccZ},
+          ]
+        });
+
+        // ===== Efectividad por zona (%)
+        const effZones = zonesList.map(z=>{
+          const sub = ALL.filter(x=>x.day >= (30-state.range) && x.zone===z);
+          const tCSz = sum(sub.filter(x=>x.type==='CS'), x=>x.minutes);
+          const tSSz = state.excludeSS ? 0 : sum(sub.filter(x=>x.type==='SS'), x=>x.minutes);
+          const e = tCSz / Math.max(1, tCSz + tSSz);
+          return Math.round(e*1000)/10;
+        });
+        chEffZone.setOption({
+          tooltip:{trigger:'axis', formatter:(p)=> `${p[0].name}: <b>${p[0].data}%</b>`},
+          grid:{left:80,right:16,top:24,bottom:28},
+          xAxis:{type:'value', max:100},
+          yAxis:{type:'category', data:zonesList},
+          series:[{type:'bar', data:effZones, label:{show:true, position:'right', formatter:'{c}%'}}]
+        });
+
+        // ===== Scatter por colaborador
+        const byStaffMap = new Map();
+        data.forEach(r=>{
+          if(!r.staffId) return;
+          const obj = byStaffMap.get(r.staffId) || {timeCS:0, timeSS:0, customers:new Set(), csCount:0};
+          if(r.type==='CS'){ obj.timeCS += r.minutes; obj.csCount++; for(let i=0;i<r.customers;i++) obj.customers.add(r.day+":"+Math.floor(rand()*3000)); }
+          if(!state.excludeSS && r.type==='SS'){ obj.timeSS += r.minutes; }
+          byStaffMap.set(r.staffId, obj);
+        });
+        const scatterData = Array.from(byStaffMap.entries()).map(([id,o])=>{
+          const effS = o.timeCS / Math.max(1, (o.timeCS + o.timeSS));
+          return {name:id, value:[ o.customers.size, +(effS*100).toFixed(1), o.timeCS ]};
+        });
+        chScatter.setOption({
+          tooltip:{formatter: p => `${p.data.name}<br/>Clientes únicos: <b>${p.value[0]}</b><br/>Efectividad: <b>${p.value[1]}%</b><br/>Min con clientes: <b>${p.value[2]}</b>`},
+          grid:{left:46,right:18,top:20,bottom:36},
+          xAxis:{name:'Clientes únicos', type:'value'},
+          yAxis:{name:'Efectividad (%)', type:'value', min:0, max:100},
+          series:[{ type:'scatter', data: scatterData, symbolSize: v => Math.max(10, Math.sqrt(v[2])*2) }]
+        });
+      }
+
+      /* ===== Export CSV ===== */
+      function exportCSV(){
+        const rows = getFiltered().map(r => ({
+          dia:r.day+1, zona:r.zone, tipo:r.type, minutos:r.minutes, staff:r.staffId||'', clientes:r.customers
+        }));
+        const header = "dia,zona,tipo,minutos,staff,clientes";
+        const body = rows.map(r => `${r.dia},${r.zona},${r.tipo},${r.minutos},${r.staff},${r.clientes}`).join("\n");
+        const blob = new Blob([header+"\n"+body], {type:'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='staff_dataset_filtrado.csv'; a.click(); URL.revokeObjectURL(url);
+      }
+
+      /* ===== Eventos / UX ===== */
+      const sidebar = document.getElementById('sidebar');
+      const openBtn = document.getElementById('openNav');
+      const closeBtn = document.getElementById('closeNav');
+      const filtersDetails = document.getElementById('filters');
+      const isMobile = () => window.matchMedia('(max-width:900px)').matches;
+
+      const forceResize = () => [chByDay,chByZone,chEffZone,chScatter].forEach(c=>c.resize());
+      const openSidebar = safe(()=> { sidebar.classList.add('open'); setTimeout(forceResize, 60); });
+      const closeSidebar = safe(()=> { sidebar.classList.remove('open'); setTimeout(forceResize, 60); });
+      ['click','touchstart'].forEach(ev=>{
+        openBtn?.addEventListener(ev, openSidebar, {passive:true});
+        closeBtn?.addEventListener(ev, closeSidebar, {passive:true});
+      });
+      document.addEventListener('click', safe((e)=>{
+        if (!isMobile()) return;
+        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !openBtn.contains(e.target)) {
+          sidebar.classList.remove('open'); setTimeout(forceResize, 60);
+        }
+      }), {passive:true});
+      filtersDetails.addEventListener('toggle', safe(()=> setTimeout(forceResize, 60)));
+      window.addEventListener('resize', safe(()=> setTimeout(forceResize, 30)));
+
+      // Filtros
+      document.getElementById('f-fecha').addEventListener('change', safe(e=>{ state.range = +e.target.value; render(); }));
+      document.getElementById('f-zona').addEventListener('change', safe(e=>{ state.zone = e.target.value; render(); }));
+      document.getElementById('f-exclude-ss').addEventListener('change', safe(e=>{ state.excludeSS = e.target.checked; render(); }));
+      document.getElementById('btn-export').addEventListener('click', safe(exportCSV));
+
+      // Render inicial
+      requestAnimationFrame(safe(()=>{ render(); setTimeout(forceResize, 60); }));
+    }));
+  })();
+  </script>
+</body>
+</html>

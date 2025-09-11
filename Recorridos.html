@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>FollowUP – Recorridos</title>
+<link rel="icon" href="https://media.licdn.com/dms/image/v2/D4E0BAQFvVz5clxj08w/company-logo_200_200/B4EZXyyjtSG0AI-/0/1743535094994/followupcx_logo?e=2147483647&v=beta&t=FVh7RUdEGOzXdcCx5TXmlVWeh3MfenVzm9HDifB-B0k" type="image/png">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+  <style>
+    :root{
+      --brand:#0f6eea; --brand-600:#0a55b6; --ink:#0f172a; --muted:#637488;
+      --bg:#f5f7fb; --card:#ffffff; --chip:#e6eefc; --radius:14px; --shadow:0 6px 24px rgba(15,23,42,.06);
+      --kpi-gap:16px; --sidebar-w:264px; --topbar-h:56px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial; color:var(--ink); background:var(--bg); display:flex;}
+
+    .shell{display:flex; width:100%; min-height:100svh; overflow:hidden}
+    .sidebar{
+      width:var(--sidebar-w); min-width:var(--sidebar-w);
+      background:linear-gradient(180deg, var(--brand), var(--brand-600));
+      color:#fff; padding:18px; display:flex; flex-direction:column; gap:12px; z-index:19;
+      transition:transform .2s ease;
+    }
+    .brand{display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:800}
+    .nav{margin-top:10px; display:flex; flex-direction:column; gap:6px}
+    .nav a{color:#fff; text-decoration:none; padding:10px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; opacity:.92}
+    .nav a[aria-current="page"], .nav a:hover{background:rgba(255,255,255,.14); opacity:1}
+    .sidebar small{opacity:.8}
+
+    .main{flex:1; display:flex; flex-direction:column; min-width:0;}
+    .topbar{display:none; position:sticky; top:0; z-index:20; height:var(--topbar-h);
+      background:linear-gradient(180deg, var(--brand), var(--brand-600)); color:#fff; padding:0 12px; align-items:center; gap:8px;}
+    .topbar h1{font-size:16px; margin:0; font-weight:800}
+    .hamb{appearance:none;border:0;background:transparent;color:#fff;font-size:22px;line-height:1; padding:8px 10px; border-radius:10px; cursor:pointer}
+    .page{flex:1; overflow:auto; overflow-x:hidden; padding:18px; position:relative; min-width:0;}
+
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; width:100%}
+    .filters-bar{ position:sticky; top:0; z-index:5; background:var(--bg); margin-bottom:14px; }
+    details.filters{width:100%; border:1px solid #e7ecf7; border-radius:12px; background:#fff; box-shadow:var(--shadow);}
+    details.filters > summary{list-style:none; cursor:pointer; padding:12px 14px; font-weight:700; color:#173f82; display:flex; align-items:center; justify-content:space-between;}
+    details.filters > summary::-webkit-details-marker{display:none}
+    details.filters[open] > summary{border-bottom:1px solid #e7ecf7}
+    .filters-inner{padding:12px}
+    .filters-grid{display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items:end;}
+    .field{display:flex; flex-direction:column; gap:6px}
+    label{font-size:12px; color:var(--muted)}
+    select,button.export{appearance:none; width:100%; padding:12px 12px; border-radius:10px; background:#fff; border:1px solid #e7ecf7; outline:none; color:var(--ink); font-size:14px; min-height:40px;}
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{background:var(--chip); color:#17438a; padding:6px 10px; border-radius:999px; font-size:12px}
+    .pill{background:#f1f5ff;border:1px solid #e3ecff;color:#173f82;border-radius:999px;padding:6px 10px;font-size:12px}
+
+    .section{margin-top:16px; display:grid; gap:14px; grid-template-columns:repeat(12,1fr)}
+    .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}
+    @media (max-width:1200px){ .span-8,.span-6{grid-column:span 12} }
+
+    .chart{width:100%; max-width:100%; min-height:320px; height:clamp(300px, 48vh, 420px)}
+    .chart.tall{min-height:420px; height:clamp(380px, 56vh, 520px)}
+    .muted{color:var(--muted)}
+
+    @media (max-width: 900px){
+      .topbar{display:flex}
+      .sidebar{position:fixed; inset:0 auto 0 0; height:100svh; transform:translateX(-100%); box-shadow: 18px 0 40px rgba(4,14,46,.2);}
+      .sidebar.open{transform:translateX(0)}
+      .page{padding:14px}
+      .section{grid-template-columns: 1fr}
+    }
+    @media (min-width:901px){
+      details.filters > summary{display:none}
+      details.filters[open] > .filters-inner{padding-top:0}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" id="shell">
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Módulos de reportes">
+      <div class="brand" aria-label="FollowUP">
+        <span>FollowUP Reports</span>
+        <button class="hamb" id="closeNav" aria-label="Ocultar menú">✕</button>
+      </div>
+      <nav class="nav">
+        <a id="lnk-bienvenida" href="Bienvenida.html">🏠 Bienvenida</a>
+        <a id="lnk-dashboard" href="Dashboard.html">📊 Dashboard</a>
+        <a id="lnk-recorridos" href="Recorridos.html" aria-current="page">🗺️ Recorridos</a>
+        <a id="lnk-buyer" href="Buyer.html" >🧑‍🤝‍🧑 Buyer Persona</a>
+        <a id="lnk-staff" href="Staff.html">👤 Staff</a>
+        <a id="lnk-comercial" href="Comercial.html" >📈 Comercial</a>
+      </nav>
+      <div style="margin-top:auto"><small>Tu espacio comercial</small></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <button class="hamb" id="openNav" aria-label="Abrir menú">☰</button>
+        <h1>Recorridos</h1>
+      </div>
+
+      <main class="page">
+        <!-- Filtros -->
+        <header class="filters-bar" role="region" aria-label="Filtros globales">
+          <details class="filters card" id="filters" open>
+            <summary>Filtros ▾</summary>
+            <div class="filters-inner">
+              <div class="filters-grid">
+                <div class="field">
+                  <label for="f-fecha">Rango de fechas</label>
+                  <select id="f-fecha">
+                    <option value="7">Últimos 7 días</option>
+                    <option value="14" selected>Últimos 14 días</option>
+                    <option value="30">Últimos 30 días</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-genero">Género</label>
+                  <select id="f-genero">
+                    <option value="all" selected>Todos</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Masculino">Masculino</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-edad">Rango etario</label>
+                  <select id="f-edad">
+                    <option value="all" selected>Todos</option>
+                    <option value="Niño">Niño</option>
+                    <option value="Adulto Joven">Adulto Joven</option>
+                    <option value="Adulto">Adulto</option>
+                    <option value="Senior">Senior</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-zona">Zona</label>
+                  <select id="f-zona">
+                    <option value="all" selected>Todas</option>
+                    <option>Pasillo</option><option>Vitrina</option><option>Tienda</option>
+                    <option>Perfumería</option><option>Zapatería</option><option>Joyería</option>
+                    <option>Carteras</option><option>Tane</option><option>Caja</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-persona">Tipo de grupo</label>
+                  <select id="f-persona">
+                    <option value="all" selected>Todos</option>
+                    <option value="Solo">Solo</option>
+                    <option value="Pareja">Pareja</option>
+                    <option value="Amigos">Amigos</option>
+                    <option value="Familia">Familia</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Vista</label>
+                  <div class="chips">
+                    <span class="chip">Tu espacio comercial</span>
+                    <span class="chip" id="chip-rango">14 días</span>
+                    <button class="export" id="btn-export">Exportar CSV (dataset filtrado)</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+        </header>
+
+        <!-- RECORRIDOS -->
+        <section id="recorridos" class="view active" aria-label="Análisis de Recorridos">
+          <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;">
+            <h2 style="margin:0">Recorridos</h2>
+            <span class="pill">Flujos (Sankey), matriz de transiciones y rutas top</span>
+          </div>
+
+          <div class="section">
+            <div class="card span-12">
+              <h3 style="margin:0 0 8px">Flujos de visitantes</h3>
+              <p class="muted" style="margin:0 0 12px">
+                Tres Sankey independientes: inicio en <b>Carteras</b>, <b>Tane</b> y <b>Zapatería</b>. Conectados a filtros de <b>Género</b> y <b>Rango etario</b>.
+              </p>
+              <div id="sankey-carteras" class="chart tall" aria-label="Sankey Carteras"></div>
+              <div id="sankey-tane" class="chart tall" aria-label="Sankey Tane"></div>
+              <div id="sankey-zapateria" class="chart tall" aria-label="Sankey Zapatería"></div>
+            </div>
+
+            <div class="card span-6">
+              <h3 style="margin:0 0 8px">Matriz de transiciones (top zonas)</h3>
+              <div id="ch-matrix" class="chart" aria-label="Matriz de transiciones entre zonas"></div>
+            </div>
+            <div class="card span-6">
+              <h3 style="margin:0 0 8px">Top 10 rutas más frecuentes</h3>
+              <div id="routes-table"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const safe = fn => (...args) => { try { return fn(...args); } catch(e){ console.error(e); } };
+
+    window.addEventListener('DOMContentLoaded', safe(() => {
+      /* ====== Datos sintéticos ====== */
+      const rand = (seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280)(42);
+      const genders = ["Femenino", "Masculino"];
+      const ages = ["Niño", "Adulto Joven", "Adulto", "Senior"];
+      const zones = ["Pasillo","Vitrina","Tienda","Perfumería","Zapatería","Joyería","Carteras","Tane","Caja"];
+      const personas = ["Solo","Pareja","Amigos","Familia"];
+      function randomHour(){ const r = rand(); if (r < 0.15) return 10 + Math.floor(rand()*3); if (r < 0.55) return 13 + Math.floor(rand()*3); if (r < 0.80) return 16 + Math.floor(rand()*2); return 18 + Math.floor(rand()*3); }
+      const ALL_VISITS = (() => {
+        const visits = [];
+        for (let d=0; d<30; d++){
+          const dayBase = 55 + Math.floor(rand()*65);
+          for (let i=0; i<dayBase; i++){
+            const g = genders[Math.floor(rand()*genders.length)];
+            const a = ages[Math.floor(Math.pow(rand(), .6)*ages.length)];
+            const p = personas[Math.floor(Math.pow(rand(), .85)*personas.length)];
+            const unique = rand() > 0.18;
+            const len = 3 + Math.floor(rand()*5);
+            const path = [];
+            let current = ["Pasillo","Vitrina","Tienda"][Math.floor(rand()*3)];
+            for (let k=0; k<len; k++){
+              path.push(current);
+              const nextCandidates = zones.filter(z => z !== current);
+              current = nextCandidates[Math.floor(rand()*nextCandidates.length)];
+            }
+            const dwell = 7 + Math.round(rand()*26) + (a==="Niño"? -2: a==="Senior"? +3: 0) + (p==="Familia"? +2: 0);
+            const startHour = randomHour();
+            visits.push({day:d, hour:startHour, gender:g, age:a, persona:p, path, dwell:Math.max(4,dwell), unique});
+          }
+        }
+        return visits;
+      })();
+
+      /* ====== Estado y helpers ====== */
+      const $ = s => document.querySelector(s);
+      const state = { range: 14, genero:"all", edad:"all", zona:"all", persona:"all" };
+      const updateChips = () => {
+        $("#chip-rango") && ($("#chip-rango").textContent = `${state.range} días`);
+      };
+      function getFiltered(){
+        const start = 30 - state.range;
+        return ALL_VISITS.filter(v =>
+          v.day>=start &&
+          (state.genero==="all" || v.gender===state.genero) &&
+          (state.edad==="all" || v.age===state.edad) &&
+          (state.zona==="all" || v.path.includes(state.zona)) &&
+          (state.persona==="all" || v.persona===state.persona)
+        );
+      }
+
+      /* ====== Sankey datasets base ====== */
+      const scenarios = {
+        femenino: {
+          menor: {
+            carteras: [
+              { source: 'Carteras', target: 'Íntimo', value: 30 },
+              { source: 'Carteras', target: 'Zapatería', value: 25 },
+              { source: 'Íntimo', target: 'Vestidos Noche', value: 20 },
+              { source: 'Zapatería', target: 'Caja', value: 10 }
+            ],
+            tane: [
+              { source: 'Tane', target: 'Probador Tane', value: 10 },
+              { source: 'Probador Tane', target: 'Caja Tane', value: 6 }
+            ],
+            zapateria: [
+              { source: 'Zapatería', target: 'Íntimo', value: 25 },
+              { source: 'Íntimo', target: 'Carteras', value: 15 }
+            ]
+          },
+          joven: {
+            carteras: [
+              { source: 'Carteras', target: 'Zapatería', value: 40 },
+              { source: 'Carteras', target: 'Joyería', value: 35 },
+              { source: 'Zapatería', target: 'Vestidos Noche', value: 25 },
+              { source: 'Joyería', target: 'Caja', value: 10 }
+            ],
+            tane: [
+              { source: 'Tane', target: 'Mesón Tane', value: 20 },
+              { source: 'Mesón Tane', target: 'Caja Tane', value: 15 }
+            ],
+            zapateria: [
+              { source: 'Zapatería', target: 'Perfumería', value: 30 },
+              { source: 'Zapatería', target: 'Vestidos Noche', value: 25 }
+            ]
+          },
+          adulto: {
+            carteras: [
+              { source: 'Carteras', target: 'Perfumería', value: 30 },
+              { source: 'Perfumería', target: 'Zapatería', value: 20 },
+              { source: 'Zapatería', target: 'Caja', value: 15 }
+            ],
+            tane: [
+              { source: 'Tane', target: 'Caja Tane', value: 25 }
+            ],
+            zapateria: [
+              { source: 'Zapatería', target: 'Joyería', value: 30 }
+            ]
+          },
+          senior: {
+            carteras: [
+              { source: 'Carteras', target: 'Joyería', value: 40 },
+              { source: 'Joyería', target: 'Caja', value: 25 }
+            ],
+            tane: [
+              { source: 'Tane', target: 'Mesón Tane', value: 15 }
+            ],
+            zapateria: [
+              { source: 'Zapatería', target: 'Perfumería', value: 35 }
+            ]
+          }
+        },
+        masculino: {
+          menor: {
+            carteras: [
+              { source: 'Carteras', target: 'Zapatería', value: 35 },
+              { source: 'Zapatería', target: 'Caja', value: 10 }
+            ],
+            tane: [
+              { source: 'Tane', target: 'Probador Tane', value: 5 }
+            ],
+            zapateria: [
+              { source: 'Zapatería', target: 'Carteras', value: 10 }
+            ]
+          },
+          joven: {
+            carteras: [
+              { source: 'Carteras', target: 'Zapatería', value: 50 },
+              { source: 'Zapatería', target: 'Íntimo', value: 20 }
+            ],
+            tane: [
+              { source: 'Tane', target: 'Caja Tane', value: 10 }
+            ],
+            zapateria: [
+              { source: 'Zapatería', target: 'Perfumería', value: 15 }
+            ]
+          },
+          adulto: {
+            carteras: [
+              { source: 'Carteras', target: 'Perfumería', value: 25 },
+              { source: 'Perfumería', target: 'Caja', value: 15 }
+            ],
+            tane: [
+              { source: 'Tane', target: 'Mesón Tane', value: 10 }
+            ],
+            zapateria: [
+              { source: 'Zapatería', target: 'Carteras', value: 10 }
+            ]
+          },
+          senior: {
+            carteras: [
+              { source: 'Carteras', target: 'Zapatería', value: 20 },
+              { source: 'Zapatería', target: 'Caja', value: 10 }
+            ],
+            tane: [
+              { source: 'Tane', target: 'Caja Tane', value: 5 }
+            ],
+            zapateria: [
+              { source: 'Zapatería', target: 'Perfumería', value: 20 }
+            ]
+          }
+        }
+      };
+      const defaultAllData = {
+        carteras: [
+          { source: 'Carteras', target: 'Zapatería', value: 40 },
+          { source: 'Carteras', target: 'Íntimo', value: 25 },
+          { source: 'Carteras', target: 'Joyería', value: 20 },
+          { source: 'Zapatería', target: 'Perfumería', value: 18 },
+          { source: 'Íntimo', target: 'Vestidos Noche', value: 15 },
+          { source: 'Joyería', target: 'Caja', value: 12 },
+          { source: 'Vestidos Noche', target: 'Tane', value: 10 },
+          { source: 'Tane', target: 'Probador Tane', value: 8 },
+          { source: 'Probador Tane', target: 'Caja Tane', value: 6 },
+          { source: 'Zapatería', target: 'Caja', value: 10 }
+        ],
+        tane: [
+          { source: 'Tane', target: 'Mesón Tane', value: 20 },
+          { source: 'Mesón Tane', target: 'Probador Tane', value: 15 },
+          { source: 'Probador Tane', target: 'Caja Tane', value: 10 },
+          { source: 'Caja Tane', target: 'Joyería', value: 5 },
+          { source: 'Caja Tane', target: 'Perfumería', value: 4 }
+        ],
+        zapateria: [
+          { source: 'Zapatería', target: 'Íntimo', value: 25 },
+          { source: 'Zapatería', target: 'Carteras', value: 15 },
+          { source: 'Zapatería', target: 'Vestidos Noche', value: 20 },
+          { source: 'Vestidos Noche', target: 'Tane', value: 10 },
+          { source: 'Tane', target: 'Caja Tane', value: 8 },
+          { source: 'Zapatería', target: 'Caja', value: 12 }
+        ]
+      };
+
+      /* ====== Sankey helpers ====== */
+      function combineLinks(links){
+        const map = new Map();
+        for (const l of links){
+          const k = l.source + '|' + l.target;
+          map.set(k, (map.get(k)||0) + l.value);
+        }
+        return Array.from(map.entries()).map(([k,v])=>{
+          const [source,target] = k.split('|');
+          return {source,target,value:v};
+        });
+      }
+      function normalizeSankey(links, startNode){
+        const combined = combineLinks(links);
+        const base = combined.filter(l => l.source === startNode).reduce((s,l)=>s+l.value, 0);
+        if (!base || base === 100) return combined;
+        const factor = 100 / base;
+        return combined.map(l => ({...l, value: +(l.value * factor).toFixed(2)}));
+      }
+      const buildNodes = links => Array.from(new Set(links.flatMap(l=>[l.source,l.target]))).map(name=>({name}));
+      const sankeyOption = (title, links) => ({
+        title:{text:title, left:'center'},
+        tooltip:{trigger:'item'},
+        series:[{
+          type:'sankey',
+          data:buildNodes(links), links,
+          emphasis:{focus:'adjacency'},
+          lineStyle:{color:'source', curveness:.5}
+        }]
+      });
+
+      /* ====== ECharts instances ====== */
+      let chMatrix=null, sankeyCarteras=null, sankeyTane=null, sankeyZap=null;
+
+      const charts = {
+        carteras: () => sankeyCarteras || (sankeyCarteras = echarts.init(document.getElementById('sankey-carteras'))),
+        tane:     () => sankeyTane     || (sankeyTane     = echarts.init(document.getElementById('sankey-tane'))),
+        zapateria:() => sankeyZap      || (sankeyZap      = echarts.init(document.getElementById('sankey-zapateria'))),
+      };
+
+      function updateEmbeddedSankeys(){
+        const g = document.getElementById('f-genero').value;
+        const a = document.getElementById('f-edad').value;
+        const genderKey = (g==='Femenino') ? 'femenino' : (g==='Masculino') ? 'masculino' : 'todos';
+        const ageKey    = (a==='Niño') ? 'menor' : (a==='Adulto Joven') ? 'joven' : (a==='Adulto') ? 'adulto' : (a==='Senior') ? 'senior' : 'todos';
+        let data;
+        if (genderKey==='todos' && ageKey==='todos'){
+          data = defaultAllData;
+        } else if (genderKey==='todos'){
+          const f = scenarios.femenino[ageKey]; const m = scenarios.masculino[ageKey];
+          data = {
+            carteras:[...f.carteras,...m.carteras],
+            tane:[...f.tane,...m.tane],
+            zapateria:[...f.zapateria,...m.zapateria]
+          };
+        } else if (ageKey==='todos'){
+          const gset = scenarios[genderKey];
+          data = {
+            carteras:[...gset.menor.carteras, ...gset.joven.carteras, ...gset.adulto.carteras, ...gset.senior.carteras],
+            tane:[...gset.menor.tane, ...gset.joven.tane, ...gset.adulto.tane, ...gset.senior.tane],
+            zapateria:[...gset.menor.zapateria, ...gset.joven.zapateria, ...gset.adulto.zapateria, ...gset.senior.zapateria],
+          };
+        } else {
+          data = scenarios[genderKey][ageKey];
+        }
+        const linksC = normalizeSankey(data.carteras, 'Carteras');
+        const linksT = normalizeSankey(data.tane, 'Tane');
+        const linksZ = normalizeSankey(data.zapateria, 'Zapatería');
+
+        charts.carteras().setOption(sankeyOption('Visitantes que iniciaron en Carteras (base 100)', linksC));
+        charts.tane().setOption(sankeyOption('Visitantes que iniciaron en Tane (base 100)', linksT));
+        charts.zapateria().setOption(sankeyOption('Visitantes que iniciaron en Zapatería (base 100)', linksZ));
+      }
+
+      function renderMatrixAndRoutes(){
+        if(!chMatrix) chMatrix = echarts.init(document.getElementById("ch-matrix"));
+
+        const data = getFiltered();
+        const zonesAll = ["Pasillo","Vitrina","Tienda","Perfumería","Zapatería","Joyería","Carteras","Tane","Caja"];
+
+        const zoneCounts = Object.fromEntries(zonesAll.map(z=>[z,0]));
+        data.forEach(v=>v.path.forEach(z=> zoneCounts[z]++));
+        const top = Object.entries(zoneCounts).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([z])=>z);
+        const idx = Object.fromEntries(top.map((z,i)=>[z,i]));
+        const matrix = Array.from({length:top.length},()=> Array(top.length).fill(0));
+        data.forEach(v=>{ for(let i=0;i<v.path.length-1;i++){ const a=v.path[i], b=v.path[i+1]; if(idx[a]!=null && idx[b]!=null){ matrix[idx[a]][idx[b]]++; } } });
+        const seriesData=[]; for(let i=0;i<top.length;i++){ for(let j=0;j<top.length;j++){ seriesData.push([i,j,matrix[i][j]]); } }
+
+        chMatrix.setOption({
+          tooltip:{formatter:(p)=> `${top[p.value[0]]} → ${top[p.value[1]]}: <b>${p.value[2]}</b>`},
+          grid:{left:90,right:16,top:40,bottom:40},
+          xAxis:{type:'category', data:top, axisLabel:{rotate:30}},
+          yAxis:{type:'category', data:top},
+          visualMap:{min:0, max:Math.max(5, Math.ceil(Math.max(...seriesData.map(v=>v[2])))), calculable:true, orient:'horizontal', left:'center', bottom:0},
+          series:[{type:'heatmap', data:seriesData}]
+        });
+
+        function compress(path){ const out=[]; for(const z of path){ if(out[out.length-1]!==z) out.push(z); } return out; }
+        const map = new Map();
+        data.forEach(v=>{ const key = compress(v.path).join(' → '); map.set(key, (map.get(key)||0)+1); });
+        const rows = Array.from(map.entries()).sort((a,b)=> b[1]-a[1]).slice(0,10);
+        document.getElementById('routes-table').innerHTML =
+          `<table><thead><tr><th>#</th><th>Ruta</th><th>Visitas</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;
+      }
+
+      /* ====== Export CSV ====== */
+      function exportCSV(){
+        const rows = getFiltered().map(v=>({ dia:v.day+1, hora:v.hour, genero:v.gender, edad:v.age, persona:v.persona, dwell:v.dwell, path:v.path.join('>') }));
+        const header = Object.keys(rows[0]||{dia:'',hora:'',genero:'',edad:'',persona:'',dwell:'',path:''}).join(',');
+        const body = rows.map(r=> Object.values(r).join(',')).join('\n');
+        const blob = new Blob([header+'\n'+body], {type:'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='palacio_centro_p1_dataset.csv'; a.click(); URL.revokeObjectURL(url);
+      }
+
+      /* ====== Drawer móvil / eventos ====== */
+      const sidebar = document.getElementById('sidebar');
+      const openBtn = document.getElementById('openNav');
+      const closeBtn = document.getElementById('closeNav');
+      const filtersDetails = document.getElementById('filters');
+      const isMobile = () => window.matchMedia('(max-width:900px)').matches;
+
+      const forceResize = () => {
+        [chMatrix,sankeyCarteras,sankeyTane,sankeyZap].filter(Boolean).forEach(c=>c.resize());
+      };
+      const openSidebar = safe(()=> { sidebar.classList.add('open'); setTimeout(forceResize, 60); });
+      const closeSidebar = safe(()=> { sidebar.classList.remove('open'); setTimeout(forceResize, 60); });
+      ['click','touchstart'].forEach(ev=>{
+        openBtn?.addEventListener(ev, openSidebar, {passive:true});
+        closeBtn?.addEventListener(ev, closeSidebar, {passive:true});
+      });
+      document.addEventListener('click', safe((e)=>{
+        if (!isMobile()) return;
+        if (sidebar.classList.contains('open') &&
+            !sidebar.contains(e.target) &&
+            !openBtn.contains(e.target)) {
+          sidebar.classList.remove('open');
+          setTimeout(forceResize, 60);
+        }
+      }), {passive:true});
+      filtersDetails.addEventListener('toggle', safe(()=> setTimeout(forceResize, 60)));
+      window.addEventListener('resize', safe(()=> setTimeout(forceResize, 30)));
+
+      /* ====== Eventos de filtros ====== */
+      ["f-fecha","f-genero","f-edad","f-zona","f-persona"].forEach(id=>{
+        document.getElementById(id).addEventListener('change', safe(()=>{
+          state.range = +document.getElementById("f-fecha").value;
+          state.genero = document.getElementById("f-genero").value;
+          state.edad = document.getElementById("f-edad").value;
+          state.zona = document.getElementById("f-zona").value;
+          state.persona = document.getElementById("f-persona").value;
+          updateChips();
+          updateEmbeddedSankeys();
+          renderMatrixAndRoutes();
+          setTimeout(forceResize, 20);
+        }));
+      });
+
+      document.getElementById('btn-export').addEventListener('click', safe(exportCSV));
+
+      // Render inicial
+      requestAnimationFrame(safe(()=>{
+        updateChips();
+        updateEmbeddedSankeys();
+        renderMatrixAndRoutes();
+        setTimeout(forceResize, 60);
+      }));
+    }));
+  })();
+  </script>
+</body>
+</html>

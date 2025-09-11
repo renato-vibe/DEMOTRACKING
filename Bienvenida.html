@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>FollowUP Reports – Bienvenida (Palacio de Hierro · Centro P1)</title>
+
+  <!-- Favicon: sustituir con el archivo real en el mismo directorio -->
+  <link rel="icon" href="https://media.licdn.com/dms/image/v2/D4E0BAQFvVz5clxj08w/company-logo_200_200/B4EZXyyjtSG0AI-/0/1743535094994/followupcx_logo?e=2147483647&v=beta&t=FVh7RUdEGOzXdcCx5TXmlVWeh3MfenVzm9HDifB-B0k" type="image/png">
+
+  <style>
+    :root{
+      --brand:#0f6eea;
+      --brand-600:#0a55b6;
+      --ink:#0f172a;
+      --muted:#637488;
+      --ok:#16a34a;
+      --warn:#ef4444;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --chip:#e6eefc;
+      --radius:14px;
+      --shadow:0 6px 24px rgba(15, 23, 42, .06);
+      --kpi-gap: 16px;            /* será compactado en ≥1024px */
+      --sidebar-w: 264px;
+      --topbar-h: 56px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial;
+      color:var(--ink);
+      background:var(--bg);
+      display:flex;
+    }
+
+    /* Layout base */
+    .shell{display:flex; width:100%; min-height:100svh; overflow:hidden}
+    .sidebar{
+      width:var(--sidebar-w); min-width:var(--sidebar-w);
+      background:linear-gradient(180deg, var(--brand), var(--brand-600));
+      color:#fff; padding:18px; display:flex; flex-direction:column; gap:12px;
+      transition: width .2s ease, min-width .2s ease, padding .2s ease, transform .2s ease;
+      z-index:19;
+    }
+    .brand{display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:800; letter-spacing:.2px}
+    .nav{margin-top:10px; display:flex; flex-direction:column; gap:6px}
+    .nav a{
+      color:#fff; text-decoration:none; padding:10px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; opacity:.92
+    }
+    .nav a[aria-current="page"], .nav a:hover{background:rgba(255,255,255,.14); opacity:1}
+    .sidebar small{opacity:.8}
+
+    .main{flex:1; display:flex; flex-direction:column; min-width:0;}
+    .topbar{
+      display:none;
+      position:sticky; top:0; z-index:20; height:var(--topbar-h);
+      background:linear-gradient(180deg, var(--brand), var(--brand-600));
+      color:#fff; padding:0 12px; align-items:center; gap:8px;
+    }
+    .topbar h1{font-size:16px; margin:0; font-weight:800}
+    .hamb{appearance:none;border:0;background:transparent;color:#fff;font-size:22px;line-height:1; padding:8px 10px; border-radius:10px; cursor:pointer}
+    .hamb:active{transform:scale(.98)}
+    .page{
+      flex:1; overflow:auto; overflow-x:hidden;
+      padding:18px; position:relative; min-width:0;
+      padding-left: max(14px, env(safe-area-inset-left));
+      padding-right: max(14px, env(safe-area-inset-right));
+    }
+
+    /* Card base */
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; width:100%; max-width:100%}
+    .card.title{display:flex; align-items:center; justify-content:space-between; padding:18px; gap:12px}
+    .pill{background:#f1f5ff;border:1px solid #e3ecff;color:#173f82;border-radius:999px;padding:6px 10px;font-size:12px}
+
+    /* Grid de bienvenida */
+    .welcome{
+      display:grid; gap:14px; grid-template-columns:repeat(12,1fr); width:100%; max-width:100%;
+    }
+    .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}
+    @media (max-width: 1200px){
+      .span-8,.span-6,.span-4{grid-column:span 12}
+    }
+
+    .cta-grid{
+      display:grid; gap:14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      align-items:stretch;
+    }
+    .cta{
+      display:flex; flex-direction:column; gap:10px; padding:16px; border:1px solid #e7ecf7; border-radius:16px;
+      text-decoration:none; color:inherit;
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .cta:hover{ transform:translateY(-1px); box-shadow:0 10px 28px rgba(15,23,42,.08); }
+    .cta h3{ margin:0; font-size:16px; }
+    .cta p{ margin:0; color:var(--muted); font-size:13px; }
+    .cta .go{ margin-top:auto; display:inline-flex; align-items:center; gap:8px; font-weight:700; color:#173f82; }
+
+    /* Chips y controles simples */
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{background:var(--chip); color:#17438a; padding:6px 10px; border-radius:999px; font-size:12px; cursor:default}
+    .btn{
+      appearance:none; border:1px solid #e7ecf7; background:#fff; color:#173f82; border-radius:10px; padding:10px 12px; cursor:pointer;
+      min-height:40px; font-weight:600;
+    }
+    .btn:active{transform:scale(.98)}
+
+    /* Compactación para 13–14" (según requerimientos) */
+    @media (min-width:1024px){
+      :root{ --kpi-gap: 12px; }
+    }
+    .chart{width:100%; max-width:100%; min-height:280px; height:clamp(260px, 42vh, 380px)}
+    .chart.tall{min-height:360px; height:clamp(340px, 52vh, 480px)}
+    @media (max-height: 900px) and (min-width: 1024px){
+      .card{ padding:12px; }
+    }
+
+    /* Responsive móvil: sidebar como drawer (consistente con páginas internas) */
+    @media (max-width: 900px){
+      .topbar{display:flex}
+      .sidebar{
+        position:fixed; inset:0 auto 0 0; height:100svh; transform:translateX(-100%);
+        transition:transform .2s ease; z-index:19; box-shadow: 18px 0 40px rgba(4,14,46,.2);
+      }
+      .sidebar.open{transform:translateX(0)}
+      .page{padding:14px}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" id="shell">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Módulos">
+      <div class="brand" aria-label="FollowUP">
+        <span>FollowUP Reports</span>
+        <button class="hamb" id="closeNav" aria-label="Ocultar menú">✕</button>
+      </div>
+      <nav class="nav">
+        <a id="lnk-bienvenida" href="Bienvenida.html" aria-current="page">🏠 Bienvenida</a>
+        <a id="lnk-dashboard" href="Dashboard.html">📊 Dashboard</a>
+        <a id="lnk-recorridos" href="Recorridos.html">🗺️ Recorridos</a>
+        <a id="lnk-buyer" href="Buyer.html">🧑‍🤝‍🧑 Buyer Persona</a>
+        <a id="lnk-staff" href="Staff.html">👤 Staff</a>
+        <a id="lnk-comercial" href="Comercial.html" >📈 Comercial</a>
+      </nav>
+      <div style="margin-top:auto">
+        <small>Aqui va tu marca</small>
+      </div>
+    </aside>
+
+    <!-- Columna principal -->
+    <div class="main">
+      <!-- Topbar móvil -->
+      <div class="topbar">
+        <button class="hamb" id="openNav" aria-label="Abrir menú">☰</button>
+        <h1>Bienvenida</h1>
+      </div>
+
+      <main class="page" role="main">
+        <!-- Header -->
+        <div class="card title" style="margin-bottom:16px;">
+          <h2 style="margin:0">Bienvenido/a a FollowUP Reports</h2>
+          <span class="pill">Tu espacio comercial</span>
+        </div>
+
+        <section class="welcome" aria-label="Resumen y accesos">
+          <!-- Resumen de filtros actuales -->
+          <div class="card span-12" aria-label="Resumen de filtros">
+            <h3 style="margin:0 0 8px">Resumen de filtros activos</h3>
+            <div class="chips" id="chips-filtros" aria-live="polite"></div>
+            <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+              <button class="btn" id="btn-reset">Restablecer filtros</button>
+              <button class="btn" id="btn-toggle-staff" title="Alternar modo STAFF">Alternar STAFF</button>
+            </div>
+          </div>
+
+          <!-- CTA a módulos -->
+          <div class="card span-12" aria-label="Módulos disponibles">
+            <h3 style="margin:0 0 12px">Módulos</h3>
+            <div class="cta-grid">
+              <a id="cta-dashboard" class="cta" href="Dashboard.html">
+                <h3>📊 Dashboard</h3>
+                <p>Tráfico, permanencia, zonas e indicadores de conversión a Caja.</p>
+                <span class="go">Abrir módulo →</span>
+              </a>
+              <a id="cta-recorridos" class="cta" href="Recorridos.html">
+                <h3>🗺️ Recorridos</h3>
+                <p>Flujos (Sankey), matriz de transiciones y rutas más frecuentes.</p>
+                <span class="go">Abrir módulo →</span>
+              </a>
+              <a id="cta-buyer" class="cta" href="Buyer.html">
+                <h3>🧑‍🤝‍🧑 Buyer Persona</h3>
+                <p>Composición por tipo de grupo y comportamiento de visita.</p>
+                <span class="go">Abrir módulo →</span>
+              </a>
+              <a id="cta-staff" class="cta" href="Staff.html">
+                <h3>👤 Staff</h3>
+                <p>Oportunidades con clientes y utilización del tiempo del staff.</p>
+                <span class="go">Abrir módulo →</span>
+              </a>
+              <a id="cta-comercial" class="cta" href="Comercial.html">
+                <h3>📈 Comercial</h3>
+                <p>Resumen de indicadores comerciales, venta y conversión.</p>
+                <span class="go">Abrir módulo →</span>
+              </a>
+            </div>
+          </div>
+
+          
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const safe = fn => (...args) => { try { return fn(...args); } catch(e){ console.error(e); } };
+
+    // ====== Persistencia de filtros entre páginas ======
+    // Contracto global: palacioFilters = {
+    //   range: 14|7|30, genero:'all'|'Femenino'|'Masculino', edad:'all'|'Niño'|'Adulto Joven'|'Adulto'|'Senior',
+    //   zona:'all'|<zona>, persona:'all'|'Solo'|'Pareja'|'Amigos'|'Familia', staffMode:'exclude'|'only'
+    // }
+
+    const DEFAULT_FILTERS = Object.freeze({
+      range: 14, genero:'all', edad:'all', zona:'all', persona:'all', staffMode:'exclude'
+    });
+
+    const STORAGE_KEY = 'palacioFilters';
+
+    // Lee query params -> objeto
+    function readQuery(){
+      const q = new URLSearchParams(location.search);
+      const obj = {};
+      for (const [k,v] of q.entries()) obj[k] = v;
+      return obj;
+    }
+
+    // Aplica prioridades: query > localStorage > default
+    function loadFilters(){
+      const fromStorage = (() => {
+        try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch{ return null; }
+      })();
+      const fromQuery = readQuery();
+
+      const merged = { ...DEFAULT_FILTERS, ...(fromStorage||{}) };
+
+      // Parseos seguros por tipo
+      if (fromQuery.range) {
+        const r = +fromQuery.range;
+        if ([7,14,30].includes(r)) merged.range = r;
+      }
+      if (fromQuery.genero && ['all','Femenino','Masculino'].includes(fromQuery.genero)) merged.genero = fromQuery.genero;
+      if (fromQuery.edad && ['all','Niño','Adulto Joven','Adulto','Senior'].includes(fromQuery.edad)) merged.edad = fromQuery.edad;
+      if (fromQuery.zona) merged.zona = fromQuery.zona; // se valida en vistas con catálogo
+      if (fromQuery.persona && ['all','Solo','Pareja','Amigos','Familia'].includes(fromQuery.persona)) merged.persona = fromQuery.persona;
+      if (fromQuery.staffMode && ['exclude','only'].includes(fromQuery.staffMode)) merged.staffMode = fromQuery.staffMode;
+
+      saveFilters(merged, /*updateURL*/ true);
+      return merged;
+    }
+
+    function saveFilters(filters, updateURL){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+      }catch(e){ console.warn('No se pudo guardar en localStorage', e); }
+      if (updateURL){
+        const qs = serializeQuery(filters);
+        history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+      }
+    }
+
+    function serializeQuery(filters){
+      const q = new URLSearchParams();
+      q.set('range', String(filters.range));
+      if (filters.genero !== 'all') q.set('genero', filters.genero);
+      if (filters.edad !== 'all') q.set('edad', filters.edad);
+      if (filters.zona !== 'all') q.set('zona', filters.zona);
+      if (filters.persona !== 'all') q.set('persona', filters.persona);
+      if (filters.staffMode !== 'exclude') q.set('staffMode', filters.staffMode);
+      return q.toString();
+    }
+
+    // Construye href propagando filtros actuales
+    function buildHref(base, filters){
+      const qs = serializeQuery(filters);
+      return base + (qs ? '?' + qs : '');
+    }
+
+    // Chips de resumen legibles
+    function chipsFromFilters(f){
+      const chips = [];
+      chips.push(`${f.range} días`);
+      if (f.genero !== 'all') chips.push(`Género: ${f.genero}`);
+      if (f.edad !== 'all') chips.push(`Edad: ${f.edad}`);
+      if (f.zona !== 'all') chips.push(`Zona: ${f.zona}`);
+      if (f.persona !== 'all') chips.push(`Grupo: ${f.persona}`);
+      if (f.staffMode === 'only') chips.push('Sólo STAFF');
+      return chips.length ? chips : ['Sin filtros'];
+    }
+
+    // ====== Sidebar móvil ======
+    const isMobile = () => window.matchMedia('(max-width:900px)').matches;
+    const sidebar = document.getElementById('sidebar');
+    const openBtn = document.getElementById('openNav');
+    const closeBtn = document.getElementById('closeNav');
+
+    function openSidebar(){ sidebar.classList.add('open'); }
+    function closeSidebar(){ sidebar.classList.remove('open'); }
+
+    ['click','touchstart'].forEach(ev=>{
+      openBtn?.addEventListener(ev, safe(openSidebar), {passive:true});
+      closeBtn?.addEventListener(ev, safe(closeSidebar), {passive:true});
+    });
+    document.addEventListener('click', safe((e)=>{
+      if (!isMobile()) return;
+      if (sidebar.classList.contains('open') &&
+          !sidebar.contains(e.target) &&
+          !openBtn.contains(e.target)) {
+        closeSidebar();
+      }
+    }), {passive:true});
+
+    // ====== Boot ======
+    window.addEventListener('DOMContentLoaded', safe(() => {
+      // 1) Cargar/normalizar filtros y reflejar en URL
+      const filters = loadFilters();
+
+      // 2) Pintar chips de resumen
+      const chipsEl = document.getElementById('chips-filtros');
+      chipsEl.innerHTML = chipsFromFilters(filters).map(t=>`<span class="chip">${t}</span>`).join(' ');
+
+      // 3) Propagar filtros a los enlaces del sidebar y a las tarjetas CTA
+      const links = [
+        ['lnk-dashboard','Dashboard.html'],
+        ['lnk-recorridos','Recorridos.html'],
+        ['lnk-buyer','Buyer.html'],
+        ['lnk-staff','Staff.html'],
+        ['cta-dashboard','Dashboard.html'],
+        ['cta-recorridos','Recorridos.html'],
+        ['cta-buyer','Buyer.html'],
+        ['cta-staff','Staff.html'],
+      ];
+      links.forEach(([id, base])=>{
+        const a = document.getElementById(id);
+        if (a) a.href = buildHref(base, filters);
+      });
+
+      // 4) Acciones: reset y alternar STAFF
+      document.getElementById('btn-reset').addEventListener('click', safe(()=>{
+        const fresh = {...DEFAULT_FILTERS};
+        saveFilters(fresh, true);
+        // Refrescar chips y enlaces
+        chipsEl.innerHTML = chipsFromFilters(fresh).map(t=>`<span class="chip">${t}</span>`).join(' ');
+        links.forEach(([id, base])=>{
+          const a = document.getElementById(id);
+          if (a) a.href = buildHref(base, fresh);
+        });
+      }));
+
+      document.getElementById('btn-toggle-staff').addEventListener('click', safe(()=>{
+        const next = {...JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'), ...DEFAULT_FILTERS};
+        next.staffMode = (next.staffMode === 'only') ? 'exclude' : 'only';
+        saveFilters(next, true);
+        chipsEl.innerHTML = chipsFromFilters(next).map(t=>`<span class="chip">${t}</span>`).join(' ');
+        links.forEach(([id, base])=>{
+          const a = document.getElementById(id);
+          if (a) a.href = buildHref(base, next);
+        });
+      }));
+    }));
+  })();
+  </script>
+</body>
+</html>
