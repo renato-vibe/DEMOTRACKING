@@ -9,76 +9,153 @@
 
   <style>
     :root{
-      --brand:#0f6eea; --brand-600:#0a55b6; --ink:#0f172a; --muted:#637488;
-      --ok:#16a34a; --warn:#ef4444; --bg:#f5f7fb; --card:#ffffff; --chip:#e6eefc;
-      --radius:14px; --shadow:0 6px 24px rgba(15, 23, 42, .06);
-      --kpi-gap:16px; --sidebar-w:264px; --topbar-h:56px;
+      --brand:#0f6eea; --brand-600:#0a55b6;
+      --ink:#0f172a; --muted:#637488;
+      --ok:#16a34a; --warn:#ef4444;
+      --bg:#f5f7fb; --card:#ffffff; --chip:#e6eefc;
+      --radius:14px; --shadow:0 6px 24px rgba(15,23,42,.06);
+      --sidebar-w:264px; --sidebar-mini:64px; --topbar-h:56px;
+      --nav-item-h:38px; --nav-pad:12px; --divider:#e5e7eb;
+      --primary-600:#0b5f80; --focus:#93c5fd;
+      --kpi-gap:16px;
+      --filter-w:420px;
+      --filter-accent:#0b5f80;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial; color:var(--ink); background:var(--bg); display:flex;}
+    html,body{height:100%; overflow-x:hidden;} /* evita margen/gutter en mobile */
+    body{
+      margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial;
+      color:var(--ink); background:var(--bg); display:flex;
+    }
 
-    /* Layout base */
-    .shell{display:flex; width:100%; min-height:100svh; overflow:hidden}
+    /* ===== Shell & offsets (sidebar izquierda) ===== */
+    body.sb-mini .shell{ margin-left: var(--sidebar-mini); }
+    body.sb-wide .shell{ margin-left: var(--sidebar-w); }
+    .shell{display:flex; width:100%; min-height:100svh; overflow:hidden; transition:margin-left .2s ease;}
+    .main{flex:1; display:flex; flex-direction:column; min-width:0;}
+    .page{flex:1; overflow:auto; overflow-x:hidden; padding:18px; min-width:0;}
+
+    /* ===== Topbar móvil (blanca) ===== */
+    .topbar{
+      display:none; position:sticky; top:0; z-index:60; height:var(--topbar-h);
+      background:#fff; color:#0b2238; padding:0 12px; align-items:center; gap:8px; border-bottom:1px solid #eaeff5;
+    }
+    .topbar h1{font-size:16px; margin:0; font-weight:800}
+    .hamb{appearance:none;border:0;background:transparent;color:#0b2238;font-size:22px;line-height:1; padding:8px 10px; border-radius:10px; cursor:pointer}
+    .hamb:active{transform:scale(.98)}
+
+    /* ===== Sidebar izquierda ===== */
     .sidebar{
       width:var(--sidebar-w); min-width:var(--sidebar-w);
-      background:linear-gradient(180deg, var(--brand), var(--brand-600));
-      color:#fff; padding:18px; display:flex; flex-direction:column; gap:12px; z-index:19;
-      transition:transform .2s ease;
+      background:#fff; color:var(--ink); padding:0; display:flex; flex-direction:column;
+      border-right:1px solid var(--divider);
+      position:fixed; inset:0 auto 0 0; z-index:70;
+      transform:translateX(0); transition:transform .25s ease, width .2s ease, min-width .2s ease;
     }
-    .brand{display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:800}
-    .nav{margin-top:10px; display:flex; flex-direction:column; gap:6px}
-    .nav a{color:#fff; text-decoration:none; padding:10px 12px; border-radius:10px; display:flex; align-items:center; gap:8px; opacity:.92}
-    .nav a[aria-current="page"], .nav a:hover{background:rgba(255,255,255,.14); opacity:1}
-    .sidebar small{opacity:.8}
+    .sidebar.mini{ width:var(--sidebar-mini); min-width:var(--sidebar-mini);}
+    .sidebar.mini.hovering{ width:var(--sidebar-w); min-width:var(--sidebar-w); }
+    .sidebar .brand{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:12px var(--nav-pad); height:var(--topbar-h); border-bottom:1px solid var(--divider);
+      font-weight:800; letter-spacing:.2px;
+    }
+    .brand .logo{display:flex; align-items:center; gap:10px}
+    .brand .logo svg{width:32px; height:32px}
+    .nav{padding:10px; display:flex; flex-direction:column; gap:6px; overflow:auto}
+    .nav ul{list-style:none; margin:0; padding:0}
+    .nav .item{
+      display:flex; align-items:center; gap:8px; height:var(--nav-item-h);
+      padding:0 6px; border-radius:10px; cursor:pointer; text-decoration:none; color:#0f172a;
+      transition:background-color .15s ease, color .15s ease;
+    }
+    .nav .item:hover{ background:#f8fafc }
+    .nav .item[aria-current="page"], .nav .item.active{ background:var(--primary-600); color:#fff; }
+    .nav .icon{width:38px; display:flex; align-items:center; justify-content:center; flex:0 0 38px; color:#0b2238}
+    .nav .label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .mini .label{display:none}
+    .mini.hovering .label{display:inline}
+    .divider{border:0; border-top:1px solid var(--divider); margin:8px 0}
 
-    .main{flex:1; display:flex; flex-direction:column; min-width:0;}
-    .topbar{display:none; position:sticky; top:0; z-index:20; height:var(--topbar-h);
-      background:linear-gradient(180deg, var(--brand), var(--brand-600)); color:#fff; padding:0 12px; align-items:center; gap:8px;}
-    .topbar h1{font-size:16px; margin:0; font-weight:800}
-    .hamb{appearance:none;border:0;background:transparent;color:#fff;font-size:22px;line-height:1; padding:8px 10px; border-radius:10px; cursor:pointer}
+    /* Colapsable menú */
+    .collapse .collapse-head{ display:flex; align-items:center; gap:8px; height:var(--nav-item-h); padding:0 6px; border-radius:10px; cursor:pointer; user-select:none; }
+    .collapse .chev{margin-left:auto; transition:transform .15s ease}
+    .collapse[aria-expanded="true"] .chev{transform:rotate(-90deg)}
+    .collapse .panel{display:none; padding-left:6px}
+    .collapse[aria-expanded="true"] .panel{display:block}
+    .mini .collapse .chev, .mini .panel{display:none}
+    .mini.hovering .collapse .chev{display:inline}
 
-    .page{flex:1; overflow:auto; overflow-x:hidden; padding:18px; position:relative; min-width:0;}
+    /* Overlay general (sidebar móvil) */
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:60; }
+    .overlay.visible{opacity:1; pointer-events:auto}
 
-    /* Cards & chips */
+    /* ===== Acciones (fecha + botón filtros + export) ===== */
+    .actions{display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap}
+    .datefake{
+      display:flex; align-items:center; gap:10px; padding:10px 12px; background:#fff; border:1px solid #e7ecf7; border-radius:12px; min-height:40px;
+      box-shadow:var(--shadow); color:#0b2238;
+    }
+    .btn{
+      appearance:none; border:0; border-radius:12px; min-height:40px; padding:10px 14px; font-weight:700; cursor:pointer;
+    }
+    .btn.filter{
+      background:var(--primary-600); color:#fff; box-shadow:0 6px 18px rgba(11,95,128,.25);
+      margin-left:auto; display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn.filter:active{transform:scale(.98)}
+    .btn.ghost{background:#fff; color:#0b2238; border:1px solid #e2e8f0}
+
+    /* ===== Drawer de Filtros (derecha) ===== */
+    .filter-overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:84;
+    }
+    .filter-overlay.visible{opacity:1; pointer-events:auto}
+    .filter-drawer{
+      position:fixed; top:0; right:0; bottom:0; width:var(--filter-w); max-width:100vw; background:#fff; z-index:85;
+      transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column;
+      border-left:1px solid #e5e7eb; box-shadow:-24px 0 48px rgba(4,14,46,.14); border-top-left-radius:14px; border-bottom-left-radius:14px;
+    }
+    .filter-drawer.open{transform:translateX(0)}
+    .filter-head{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px 18px; border-bottom:1px solid #eaeef4}
+    .filter-head h3{margin:0; font-size:20px}
+    .x{appearance:none;border:0;background:#f3f4f6; width:32px; height:32px; border-radius:10px; cursor:pointer; font-size:18px}
+    .filter-scroll{flex:1; overflow:auto; padding-bottom:12px}
+    .exp{border-bottom:1px solid #edf0f6}
+    .exp summary{
+      list-style:none; cursor:pointer; padding:16px 18px; font-weight:700; color:#0b2238; display:flex; align-items:center; justify-content:space-between;
+    }
+    .exp summary::-webkit-details-marker{display:none}
+    .exp[open] summary{background:#fbfcff}
+    .exp .exp-body{padding:0 18px 16px 18px}
+    .field{display:flex; flex-direction:column; gap:6px; margin-top:10px}
+    label{font-size:12px; color:#637488}
+    select{appearance:none; width:100%; padding:12px 12px; border-radius:10px; background:#fff; border:1px solid #e7ecf7; outline:none; color:#0f172a; font-size:14px; min-height:40px;}
+    .filter-actions{
+      position:sticky; bottom:0; background:#fff; border-top:1px solid #eaeef4; padding:12px; display:flex; justify-content:space-between; gap:12px;
+    }
+    .btn.apply{background:#0b5f80; color:#fff}
+
+    /* Tarjetas / layout */
     .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; width:100%; max-width:100%}
-    .card.title{display:flex; align-items:center; justify-content:space-between; padding:18px; gap:12px}
     .pill{background:#f1f5ff;border:1px solid #e3ecff;color:#173f82;border-radius:999px;padding:6px 10px;font-size:12px}
-    .chips{display:flex; flex-wrap:wrap; gap:8px}
-    .chip{background:var(--chip); color:#17438a; padding:6px 10px; border-radius:999px; font-size:12px; cursor:default}
-    .chip.reset{cursor:pointer}
-    .btn{appearance:none; border:1px solid #e7ecf7; background:#fff; color:#173f82; border-radius:10px; padding:10px 12px; cursor:pointer; min-height:40px; font-weight:600}
-    .btn:active{transform:scale(.98)}
+    .card.title{display:flex; align-items:center; justify-content:space-between; padding:18px; gap:12px}
+    .kpis{ display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--kpi-gap); grid-auto-rows: minmax(120px, auto); align-items: stretch; }
+    .kpi{ padding:18px 18px 14px; border:1px solid #e7ecf7; border-radius:18px; box-shadow:0 10px 30px rgba(15,23,42,.08); container-type:inline-size; min-width:0; }
+    .kpi h4{ margin:0 0 8px; font-size:14px; color:#4b5870; letter-spacing:.2px; display:flex; align-items:center; gap:6px; }
+    .kpi .v{ font-size: clamp(22px, 12cqw, 42px); line-height:1; font-weight:900; letter-spacing:.2px; color:#111827; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .delta{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; }
+    .delta.up{ color:#16a34a; } .delta.down{ color:#ef4444; }
 
-    .filters-bar{ position:sticky; top:0; z-index:5; background:var(--bg); margin-bottom:14px; }
-    details.filters{width:100%; border:1px solid #e7ecf7; border-radius:12px; background:#fff; box-shadow:var(--shadow);}
-    details.filters > summary{list-style:none; cursor:pointer; padding:12px 14px; font-weight:700; color:#173f82; display:flex; align-items:center; justify-content:space-between;}
-    details.filters > summary::-webkit-details-marker{display:none}
-    details.filters[open] > summary{border-bottom:1px solid #e7ecf7}
-    .filters-inner{padding:12px}
-    .filters-grid{display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items:end;}
-    .field{display:flex; flex-direction:column; gap:6px}
-    label{font-size:12px; color:var(--muted)}
-    select,button.export{appearance:none; width:100%; padding:12px 12px; border-radius:10px; background:#fff; border:1px solid #e7ecf7; outline:none; color:var(--ink); font-size:14px; min-height:40px;}
-
-    /* Grid */
     .section{margin-top:16px; display:grid; gap:14px; grid-template-columns:repeat(12,1fr)}
     .span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}
     @media (max-width:1200px){ .span-8,.span-6,.span-4{grid-column:span 12} }
 
-    /* KPIs (con tipografía adaptable para evitar overflow) */
-    .kpis{display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--kpi-gap)}
-    .card.kpi{ padding:18px 18px 14px; border:1px solid #e7ecf7; border-radius:18px; box-shadow:0 10px 30px rgba(15,23,42,.08); container-type:inline-size; }
-    .kpi h4{ margin:0 0 8px; font-size:14px; color:#4b5870; letter-spacing:.2px; display:flex; align-items:center; gap:6px;}
-    .kpi .v{
-      font-size:clamp(22px, 12cqw, 38px);
-      line-height:1; font-weight:900; letter-spacing:.2px; color:#111827; margin-bottom:6px;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    }
-    .delta{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; }
-    .delta.up{ color:#16a34a; } .delta.down{ color:#ef4444; }
+    .chart{width:100%; max-width:100%; min-height:320px; height:clamp(300px, 48vh, 420px)}
+    .chart.tall{min-height:420px; height:clamp(380px, 56vh, 520px)}
+    .muted{color:var(--muted)}
 
-    /* Tooltip (accesible) */
+    /* Tooltip */
     .tooltip{position:relative; display:inline-flex; align-items:center; cursor:help; outline:none}
     .tooltip .i{width:18px;height:18px;border-radius:50%;background:#e6eefc;color:#173f82;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;line-height:1}
     .tooltip .tip{
@@ -88,141 +165,142 @@
       opacity:0; visibility:hidden; transition:opacity .12s ease;
     }
     .tooltip:focus .tip, .tooltip:hover .tip{opacity:1; visibility:visible}
-    .muted{color:var(--muted)}
 
-    /* Charts */
-    .chart{width:100%; max-width:100%; min-height:320px; height:clamp(300px, 48vh, 420px)}
-    .chart.tall{min-height:420px; height:clamp(380px, 56vh, 520px)}
-
-    /* Responsive móvil: sidebar como drawer */
+    /* ===== Responsive ===== */
     @media (max-width: 900px){
       .topbar{display:flex}
-      .sidebar{position:fixed; inset:0 auto 0 0; height:100svh; transform:translateX(-100%); box-shadow: 18px 0 40px rgba(4,14,46,.2);}
-      .sidebar.open{transform:translateX(0)}
+      .shell{ margin-left:0; }
+      .sidebar{ width:100vw; min-width:100vw; transform:translateX(-100%); }
+      .sidebar.open{ transform:translateX(0) }
       .page{padding:14px}
-      .kpis{grid-template-columns: 1fr}
-      .section{grid-template-columns: 1fr}
+      .sidebar.mini,.sidebar.mini.hovering{ width:100vw; min-width:100vw; }
+      .mini .label{display:inline}
+      .mini .collapse .chev{display:inline}
+      .filter-drawer{ width:100vw; border-radius:0 }
     }
-    @media (min-width:901px){
-      details.filters > summary{display:none}
-      details.filters[open] > .filters-inner{padding-top:0}
-    }
+
+    /* Accesibilidad */
+    .item:focus,.collapse-head:focus,.btn:focus,.x:focus,summary:focus{outline:2px solid var(--focus); outline-offset:2px; border-radius:10px}
+    @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important} }
   </style>
 </head>
-<body>
+<body class="sb-mini">
   <div class="shell" id="shell">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Módulos de reportes">
-      <div class="brand" aria-label="FollowUP">
-        <span>FollowUP Reports</span>
-        <button class="hamb" id="closeNav" aria-label="Ocultar menú">✕</button>
+    <!-- Overlay general (sidebar izquierda móvil) -->
+    <div class="overlay" id="overlay" aria-hidden="true"></div>
+
+    <!-- ===== Sidebar izquierda / Drawer ===== -->
+    <aside class="sidebar mini" id="sidebar" role="navigation" aria-label="Módulos de reportes">
+      <div class="brand">
+        <div class="logo" aria-label="FollowUP">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#0f6eea"/><stop offset="1" stop-color="#0a55b6"/></linearGradient></defs>
+            <circle cx="24" cy="24" r="20" fill="url(#g)"/>
+            <path d="M14 26l6 6 14-14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>
+          <strong class="label">FollowUP Reports</strong>
+        </div>
       </div>
+
       <nav class="nav">
-        <a id="lnk-bienvenida" href="Bienvenida.html">🏠 Bienvenida</a>
-        <a id="lnk-dashboard" href="Dashboard.html">📊 Dashboard</a>
-        <a id="lnk-recorridos" href="Recorridos.html">🗺️ Recorridos</a>
-        <a id="lnk-buyer" href="Buyer.html">🧑‍🤝‍🧑 Buyer Persona</a>
-        <a id="lnk-staff" href="Staff.html">👤 Staff</a>
-        <a id="lnk-comercial" href="Comercial.html" aria-current="page">📈 Comercial</a>
+        <ul>
+          <li>
+            <a id="lnk-bienvenida" class="item" href="https://home.fupbi.org/">
+              <span class="icon" aria-hidden="true">🏠</span>
+              <span class="label">Inicio</span>
+            </a>
+          </li>
+
+          <li class="collapse" id="grp-reportes" aria-expanded="true">
+            <div class="collapse-head" role="button" tabindex="0" aria-controls="panel-reportes" aria-expanded="true">
+              <span class="icon" aria-hidden="true">📑</span>
+              <span class="label">Reportes</span>
+              <span class="chev" aria-hidden="true">❮</span>
+            </div>
+            <div id="panel-reportes" class="panel" role="region" aria-label="Reportes">
+              <ul>
+                <li>
+                  <a class="item" id="lnk-dashboard" href="Dashboard.html">
+                    <span class="icon" aria-hidden="true">📊</span>
+                    <span class="label">Dashboard</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="item" id="lnk-recorridos" href="Recorridos.html">
+                    <span class="icon" aria-hidden="true">🗺️</span>
+                    <span class="label">Recorridos</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="item" id="lnk-buyer" href="Buyer.html">
+                    <span class="icon" aria-hidden="true">🧑‍🤝‍🧑</span>
+                    <span class="label">Buyer Persona</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="item" id="lnk-staff" href="Staff.html">
+                    <span class="icon" aria-hidden="true">👤</span>
+                    <span class="label">Staff</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="item" id="lnk-comercial" href="Comercial.html" aria-current="page">
+                    <span class="icon" aria-hidden="true">📈</span>
+                    <span class="label">Comercial</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li>
+        </ul>
       </nav>
-      <div style="margin-top:auto"><small>Tu espacio comercial</small></div>
+      <div style="margin:auto 10px 10px; opacity:.85; font-size:12px;"><small>Aquí va tu marca</small></div>
     </aside>
 
+    <!-- ===== Main ===== -->
     <div class="main">
-      <!-- Topbar móvil -->
       <div class="topbar">
         <button class="hamb" id="openNav" aria-label="Abrir menú">☰</button>
-        <h1>Comercial</h1>
+        <h1 id="pageTitle">Comercial</h1>
       </div>
 
-      <main class="page" role="main">
-        <!-- Filtros -->
-        <header class="filters-bar" role="region" aria-label="Filtros comerciales">
-          <details class="filters card" id="filters" open>
-            <summary>Filtros ▾</summary>
-            <div class="filters-inner">
-              <div class="filters-grid">
-                <div class="field">
-                  <label for="f-fecha">Rango de fechas</label>
-                  <select id="f-fecha">
-                    <option value="7">Últimos 7 días</option>
-                    <option value="14" selected>Últimos 14 días</option>
-                    <option value="30">Últimos 30 días</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="f-genero">Género</label>
-                  <select id="f-genero">
-                    <option value="all" selected>Todos</option>
-                    <option value="Femenino">Femenino</option>
-                    <option value="Masculino">Masculino</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="f-edad">Rango etario</label>
-                  <select id="f-edad">
-                    <option value="all" selected>Todos</option>
-                    <option value="Niño">Niño</option>
-                    <option value="Adulto Joven">Adulto Joven</option>
-                    <option value="Adulto">Adulto</option>
-                    <option value="Senior">Senior</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="f-zona">Zona</label>
-                  <select id="f-zona">
-                    <option value="all" selected>Todas</option>
-                    <option>Pasillo</option><option>Vitrina</option><option>Tienda</option>
-                    <option>Perfumería</option><option>Zapatería</option><option>Joyería</option>
-                    <option>Carteras</option><option>Tane</option><option>Caja</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="f-persona">Tipo de grupo</label>
-                  <select id="f-persona">
-                    <option value="all" selected>Todos</option>
-                    <option value="Solo">Solo</option>
-                    <option value="Pareja">Pareja</option>
-                    <option value="Amigos">Amigos</option>
-                    <option value="Familia">Familia</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label>Vista</label>
-                  <div class="chips">
-                    <span class="chip" id="chip-rango">14 días</span>
-                    <span class="chip" id="chip-filtros">Sin filtros</span>
-                    <button class="export" id="btn-export">Exportar CSV (dataset comercial filtrado)</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </details>
-        </header>
+      <main class="page">
+        <!-- Fila de acciones (fecha + botón Filtros + export) -->
+        <div class="actions">
+          <div class="datefake" title="Rango de fechas">
+            <span>📅</span><span id="date-range-label">Últimos 14 días</span>
+          </div>
+          <button class="btn ghost" id="btn-export" aria-label="Exportar CSV">Exportar CSV</button>
+          <button class="btn filter" id="btn-open-filters" aria-label="Abrir filtros">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3" style="flex:0 0 auto;">
+              <path d="M400-240v-80h160v80H400ZM240-440v-80h480v80H240ZM120-640v-80h720v80H120Z"/>
+            </svg>
+            <span style="line-height:1">Filtros</span>
+          </button>
+        </div>
 
         <!-- Título -->
         <div class="card title" style="margin-bottom:16px;">
           <h2 style="margin:0">Comercial – Insights de venta + recorrido</h2>
           <span class="pill">Ventas, Art. x Ticket, SPV y eficiencia por zona</span>
         </div>
-        
-        <div class="card span-12" id="insights-card" style="margin-bottom:16px;">
+
+        <!-- Insights -->
+        <div class="card" id="insights-card" style="margin-bottom:16px;">
           <h3 style="margin:0 0 8px">Insights automáticos</h3>
           <ul id="insights-list" class="muted" style="margin:0 0 6px 18px"></ul>
         </div>
 
-        <!-- KPIs (con tooltips explicativos) -->
+        <!-- KPIs -->
         <div class="kpis" role="region" aria-label="Indicadores Comerciales">
           <div class="card kpi"><h4>Ventas</h4><div class="v" id="kpi-sales">–</div><div class="delta up" id="kpi-sales-var">–</div></div>
-
           <div class="card kpi"><h4>Tickets</h4><div class="v" id="kpi-tickets">–</div><div class="delta up" id="kpi-tickets-var">–</div></div>
-
           <div class="card kpi"><h4>Ticket Promedio</h4><div class="v" id="kpi-atv">–</div><div class="delta up" id="kpi-atv-var">–</div></div>
 
           <div class="card kpi">
             <h4>Art.x Ticket
-              <span class="tooltip" tabindex="0" aria-label="UPT: Unidades por ticket. Promedio de artículos vendidos en cada ticket; útil para detectar oportunidades de upsell/cross-sell.">
-                <span class="i">i</span><span class="tip" role="tooltip">Promedio de artículos vendidos en cada ticket; útil para detectar oportunidades de upsell / cross-sell.</span>
+              <span class="tooltip" tabindex="0" aria-label="Promedio de artículos por ticket.">
+                <span class="i">i</span><span class="tip" role="tooltip">Promedio de artículos vendidos por ticket (UPT).</span>
               </span>
             </h4>
             <div class="v" id="kpi-upt">–</div><div class="delta up" id="kpi-upt-var">–</div>
@@ -235,8 +313,8 @@
 
           <div class="card kpi">
             <h4>SPV
-              <span class="tooltip" tabindex="0" aria-label="SPV (Spend per Visitor): Ventas totales divididas por el número de visitantes filtrados. Indica el gasto promedio por visitante.">
-                <span class="i">i</span><span class="tip" role="tooltip">SPV (Spend per Visitor): Ventas totales divididas por el número de visitantes filtrados. Indica el gasto promedio por visitante.</span>
+              <span class="tooltip" tabindex="0" aria-label="Spend per Visitor: Ventas / Visitantes.">
+                <span class="i">i</span><span class="tip" role="tooltip">SPV (Spend per Visitor): Ventas / Visitantes filtrados.</span>
               </span>
             </h4>
             <div class="v" id="kpi-spv">–</div><div class="delta up" id="kpi-spv-var">–</div>
@@ -244,8 +322,8 @@
 
           <div class="card kpi">
             <h4>Yield por Zona
-              <span class="tooltip" tabindex="0" aria-label="Yield por Zona: Ventas atribuidas a una zona dividido por visitantes que pasaron por esa zona. Si está 'Todas', se muestra el promedio de las zonas principales.">
-                <span class="i">i</span><span class="tip" role="tooltip">Yield por Zona: Ventas atribuidas a una zona ÷ visitantes que pasaron por esa zona. Si está “Todas”, se muestra el promedio de las zonas principales.</span>
+              <span class="tooltip" tabindex="0" aria-label="Ventas atribuidas a una zona / visitantes que pasaron por esa zona.">
+                <span class="i">i</span><span class="tip" role="tooltip">Ventas de la zona ÷ visitantes de la zona.</span>
               </span>
             </h4>
             <div class="v" id="kpi-yield">–</div><div class="delta up" id="kpi-yield-var">–</div>
@@ -253,32 +331,32 @@
 
           <div class="card kpi">
             <h4>CEI
-              <span class="tooltip" tabindex="0" aria-label="CEI (Commercial Efficiency Index): Ventas divididas por visitantes ponderados por su tiempo en tienda (dwell relativo). Mide eficiencia comercial, no conversión.">
-                <span class="i">i</span><span class="tip" role="tooltip">CEI (Commercial Efficiency Index): Ventas ÷ visitantes ponderados por su tiempo en tienda (dwell relativo). Mide eficiencia comercial, no conversión.</span>
+              <span class="tooltip" tabindex="0" aria-label="Commercial Efficiency Index: Ventas / (visitantes ponderados por dwell relativo).">
+                <span class="i">i</span><span class="tip" role="tooltip">CEI = Ventas ÷ visitantes ponderados por su tiempo en tienda.</span>
               </span>
             </h4>
             <div class="v" id="kpi-cei">–</div><div class="delta up" id="kpi-cei-var">–</div>
           </div>
         </div>
 
-        <!-- Secciones (cada título con tooltip explicativo) -->
-        <section class="section">
+        <!-- Secciones -->
+        <div class="section">
           <div class="card span-8">
             <h3 style="margin:0 0 8px; display:flex; align-items:center; gap:6px">
               Tendencia Ventas & SPV
-              <span class="tooltip" tabindex="0" aria-label="Líneas con eje dual: Ventas diarias (CLP) y gasto por visitante (SPV). Útil para ver si sube el gasto sin depender de más tráfico.">
-                <span class="i">i</span><span class="tip" role="tooltip">Líneas con eje dual: Ventas diarias (CLP) y gasto por visitante (SPV). Útil para ver si sube el gasto sin depender de más tráfico.</span>
+              <span class="tooltip" tabindex="0" aria-label="Líneas con eje dual: Ventas diarias y gasto por visitante (SPV).">
+                <span class="i">i</span><span class="tip" role="tooltip">Eje izq: Ventas (CLP). Eje der: SPV (CLP/visitante).</span>
               </span>
             </h3>
-            <p class="muted" style="margin:0 0 8px">Eje izquierdo CLP; derecho CLP/visitante. Puedes hacer zoom.</p>
+            <p class="muted" style="margin:0 0 8px">Puedes hacer zoom en el rango.</p>
             <div id="ch-trend" class="chart"></div>
           </div>
 
           <div class="card span-4">
             <h3 style="margin:0 0 8px; display:flex; align-items:center; gap:6px">
               Mix de ventas por zona (apilado por grupo)
-              <span class="tooltip" tabindex="0" aria-label="Barras apiladas por tipo de grupo (Solo, Pareja, etc.). Muestra el mix de ventas por zona; clic para fijar la zona como filtro.">
-                <span class="i">i</span><span class="tip" role="tooltip">Barras apiladas por tipo de grupo (Solo, Pareja, etc.). Muestra el mix de ventas por zona; clic para fijar la zona como filtro.</span>
+              <span class="tooltip" tabindex="0" aria-label="Clic en una barra para filtrar la zona.">
+                <span class="i">i</span><span class="tip" role="tooltip">Apilado por tipo de grupo (Solo, Pareja, etc.).</span>
               </span>
             </h3>
             <div id="ch-mix-zone" class="chart"></div>
@@ -287,8 +365,8 @@
           <div class="card span-6">
             <h3 style="margin:0 0 8px; display:flex; align-items:center; gap:6px">
               Art. x Ticket vs Ticket Promedio por zona
-              <span class="tooltip" tabindex="0" aria-label="Gráfico de burbujas: X=UPT, Y=Ticket Promedio, tamaño=Ventas. Los cuadrantes ayudan a detectar oportunidades de upsell y pricing.">
-                <span class="i">i</span><span class="tip" role="tooltip">Burbuja: X=Art. x Ticket, Y=Ticket Promedio, tamaño=Ventas. Cuadrantes revelan oportunidades de upsell y pricing.</span>
+              <span class="tooltip" tabindex="0" aria-label="Burbuja: X=UPT, Y=Ticket Promedio, tamaño=Ventas.">
+                <span class="i">i</span><span class="tip" role="tooltip">Cuadrantes revelan oportunidades de upsell y pricing.</span>
               </span>
             </h3>
             <div id="ch-bubble" class="chart"></div>
@@ -297,8 +375,8 @@
           <div class="card span-6">
             <h3 style="margin:0 0 8px; display:flex; align-items:center; gap:6px">
               Heatmap ventas por hora × zona
-              <span class="tooltip" tabindex="0" aria-label="Monto vendido estimado por hora y zona de influencia del ticket. Clic en un cuadro para filtrar la zona.">
-                <span class="i">i</span><span class="tip" role="tooltip">Monto vendido estimado por hora y zona de influencia del ticket. Clic en un cuadro para filtrar la zona.</span>
+              <span class="tooltip" tabindex="0" aria-label="Clic en un cuadro para filtrar la zona.">
+                <span class="i">i</span><span class="tip" role="tooltip">Monto vendido estimado por hora y zona.</span>
               </span>
             </h3>
             <div id="ch-heat" class="chart"></div>
@@ -307,8 +385,8 @@
           <div class="card span-6">
             <h3 style="margin:0 0 8px; display:flex; align-items:center; gap:6px">
               Co-ocurrencia de categorías (cross-sell)
-              <span class="tooltip" tabindex="0" aria-label="Frecuencia con la que pares de zonas aparecen en el mismo recorrido previo a una compra. Sugerencias para bundling y planogramas.">
-                <span class="i">i</span><span class="tip" role="tooltip">Frecuencia con la que pares de zonas aparecen en el mismo recorrido previo a una compra. Útil para bundling y planogramas.</span>
+              <span class="tooltip" tabindex="0" aria-label="Frecuencia con que pares de zonas aparecen en el mismo recorrido previo a compra.">
+                <span class="i">i</span><span class="tip" role="tooltip">Sugerencias para bundling y planogramas.</span>
               </span>
             </h3>
             <div id="ch-cross" class="chart"></div>
@@ -317,8 +395,8 @@
           <div class="card span-6">
             <h3 style="margin:0 0 8px; display:flex; align-items:center; gap:6px">
               Distribución del tamaño de ticket
-              <span class="tooltip" tabindex="0" aria-label="Histograma del monto por ticket. Las líneas verticales marcan los percentiles P25, P50 (mediana) y P75.">
-                <span class="i">i</span><span class="tip" role="tooltip">Histograma del monto por ticket. Las líneas verticales marcan P25, P50 (mediana) y P75.</span>
+              <span class="tooltip" tabindex="0" aria-label="Histograma del monto por ticket.">
+                <span class="i">i</span><span class="tip" role="tooltip">Líneas verticales: percentiles P25, P50 y P75.</span>
               </span>
             </h3>
             <div id="ch-hist" class="chart"></div>
@@ -327,568 +405,662 @@
           <div class="card span-12">
             <h3 style="margin:0 0 8px; display:flex; align-items:center; gap:6px">
               Ranking CEI por zona
-              <span class="tooltip" tabindex="0" aria-label="Mayor CEI = mejores ventas para una misma afluencia ponderada por tiempo (dwell). Compara eficiencia comercial entre zonas.">
-                <span class="i">i</span><span class="tip" role="tooltip">Mayor CEI = mejores ventas para una misma afluencia ponderada por tiempo (dwell). Compara eficiencia comercial entre zonas.</span>
+              <span class="tooltip" tabindex="0" aria-label="Mayor CEI = mejores ventas para igual afluencia ponderada por tiempo.">
+                <span class="i">i</span><span class="tip" role="tooltip">Compara eficiencia comercial entre zonas.</span>
               </span>
             </h3>
             <div id="ch-cei" class="chart"></div>
           </div>
-        </section>
+        </div>
       </main>
     </div>
   </div>
 
+  <!-- ===== Drawer de Filtros (derecha) ===== -->
+  <div class="filter-overlay" id="filterOverlay" aria-hidden="true"></div>
+  <aside class="filter-drawer" id="filterDrawer" role="dialog" aria-modal="true" aria-label="Filtros Comercial">
+    <div class="filter-head">
+      <h3>Filtros</h3>
+      <button class="x" id="btn-close-filters" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="filter-scroll">
+      <!-- 1) Rango de fechas -->
+      <details class="exp" open>
+        <summary>Rango de fechas ▾</summary>
+        <div class="exp-body">
+          <div class="field">
+            <label for="f-fecha">Seleccionar</label>
+            <select id="f-fecha">
+              <option value="7">Últimos 7 días</option>
+              <option value="14" selected>Últimos 14 días</option>
+              <option value="30">Últimos 30 días</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <!-- 2) Género -->
+      <details class="exp">
+        <summary>Género ▾</summary>
+        <div class="exp-body">
+          <div class="field">
+            <label for="f-genero">Filtrar por</label>
+            <select id="f-genero">
+              <option value="all" selected>Todos</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Masculino">Masculino</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <!-- 3) Rango etario -->
+      <details class="exp">
+        <summary>Rango etario ▾</summary>
+        <div class="exp-body">
+          <div class="field">
+            <label for="f-edad">Filtrar por</label>
+            <select id="f-edad">
+              <option value="all" selected>Todos</option>
+              <option value="Niño">Niño</option>
+              <option value="Adulto Joven">Adulto Joven</option>
+              <option value="Adulto">Adulto</option>
+              <option value="Senior">Senior</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <!-- 4) Zona -->
+      <details class="exp">
+        <summary>Zonas ▾</summary>
+        <div class="exp-body">
+          <div class="field">
+            <label for="f-zona">Filtrar por</label>
+            <select id="f-zona">
+              <option value="all" selected>Todas</option>
+              <option>Pasillo</option><option>Vitrina</option><option>Tienda</option>
+              <option>Perfumería</option><option>Zapatería</option><option>Joyería</option>
+              <option>Carteras</option><option>Tane</option><option>Caja</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <!-- 5) Tipo de grupo -->
+      <details class="exp">
+        <summary>Tipo de grupo ▾</summary>
+        <div class="exp-body">
+          <div class="field">
+            <label for="f-persona">Filtrar por</label>
+            <select id="f-persona">
+              <option value="all" selected>Todos</option>
+              <option value="Solo">Solo</option>
+              <option value="Pareja">Pareja</option>
+              <option value="Amigos">Amigos</option>
+              <option value="Familia">Familia</option>
+            </select>
+          </div>
+        </div>
+      </details>
+    </div>
+    <div class="filter-actions">
+      <button class="btn ghost" id="btn-reset">Restablecer filtros</button>
+      <button class="btn apply" id="btn-apply">Aplicar</button>
+    </div>
+  </aside>
+
   <script>
-  (function(){
-    const safe = fn => (...a) => { try{ return fn(...a);}catch(e){ console.error(e); } };
+  (function () {
+    const safe = fn => (...args) => { try { return fn(...args); } catch(e){ console.error(e); } };
 
-    // ====== Filtros persistentes ======
-    const DEFAULT_FILTERS = Object.freeze({
-      range:14, genero:'all', edad:'all', zona:'all', persona:'all', staffMode:'exclude'
+    /* =========================================================
+       NAV / DRAWER IZQUIERDO (idéntico a “Dashboard”)
+       ========================================================= */
+    let forceResizeSoon = () => {}; // se redefine más abajo
+
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const openBtn = document.getElementById('openNav');
+    const pageTitle = document.getElementById('pageTitle');
+    const isMobile = () => window.matchMedia('(max-width:900px)').matches;
+
+    function applyBodyOffset(){
+      if (isMobile()) {
+        document.body.classList.remove('sb-mini','sb-wide');
+      } else {
+        if (sidebar.classList.contains('mini') && !sidebar.classList.contains('hovering')) {
+          document.body.classList.add('sb-mini'); document.body.classList.remove('sb-wide');
+        } else {
+          document.body.classList.add('sb-wide'); document.body.classList.remove('sb-mini');
+        }
+      }
+    }
+    applyBodyOffset();
+    window.addEventListener('resize', safe(() => { applyBodyOffset(); forceResizeSoon(); }));
+
+    function openSidebar(){ sidebar.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow='hidden'; forceResizeSoon(); }
+    function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow=''; forceResizeSoon(); }
+
+    ;['click','touchstart'].forEach(ev=>{
+      openBtn?.addEventListener(ev, safe(openSidebar), {passive:true});
+      overlay?.addEventListener(ev, safe(closeSidebar), {passive:true});
     });
-    const STORAGE_KEY = 'palacioFilters';
 
-    const ALLOWED = {
-      genero:['all','Femenino','Masculino'],
-      edad:['all','Niño','Adulto Joven','Adulto','Senior'],
-      persona:['all','Solo','Pareja','Amigos','Familia'],
-      zona:null // validamos a posteriori contra "zones"
-    };
+    document.addEventListener('keydown', safe(e=>{
+      if(e.key==='Escape' && isMobile() && overlay.classList.contains('visible')) closeSidebar();
+    }));
 
-    function readQuery(){
-      const q = new URLSearchParams(location.search);
-      const obj = {}; for (const [k,v] of q.entries()) obj[k]=v; return obj;
-    }
-    function serializeQuery(f){
-      const q = new URLSearchParams();
-      q.set('range', String(f.range));
-      if (f.genero!=='all') q.set('genero', f.genero);
-      if (f.edad!=='all') q.set('edad', f.edad);
-      if (f.zona!=='all') q.set('zona', f.zona);
-      if (f.persona!=='all') q.set('persona', f.persona);
-      if (f.staffMode!=='exclude') q.set('staffMode', f.staffMode);
-      return q.toString();
-    }
-    function buildHref(base, f){ const qs = serializeQuery(f); return base + (qs? '?'+qs:''); }
-
-    // Normaliza y sanea filtros (evita rangos inválidos que hacían caer todo a 0)
-    function normalizeFilters(f){
-      const out = {...DEFAULT_FILTERS, ...f};
-      out.range = Math.min(30, Math.max(1, parseInt(out.range,10) || DEFAULT_FILTERS.range));
-      if (!ALLOWED.genero.includes(out.genero)) out.genero='all';
-      if (!ALLOWED.edad.includes(out.edad)) out.edad='all';
-      if (!ALLOWED.persona.includes(out.persona)) out.persona='all';
-      // zona se valida luego de definir "zones"; si no coincide, all
-      return out;
-    }
-
-    function loadFilters(){
-      const fromStorage = (()=>{ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); }catch{ return null; }})();
-      const fromQuery = readQuery();
-      let f = {...DEFAULT_FILTERS, ...(fromStorage||{})};
-      if (fromQuery.range) f.range = fromQuery.range;
-      if (fromQuery.genero) f.genero = fromQuery.genero;
-      if (fromQuery.edad) f.edad = fromQuery.edad;
-      if (fromQuery.zona) f.zona = fromQuery.zona;
-      if (fromQuery.persona) f.persona = fromQuery.persona;
-      if (fromQuery.staffMode) f.staffMode = fromQuery.staffMode;
-      f = normalizeFilters(f); // primera normalización
-      return f;
-    }
-    function saveFilters(f, updateURL){
-      const normalized = normalizeFilters(f);
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized)); }catch(e){}
-      if (updateURL){ const qs=serializeQuery(normalized); history.replaceState(null, '', location.pathname + (qs? '?'+qs:'')); }
-    }
-
-    // ====== Datos sintéticos ======
-    const rand = (seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280)(101); // determinista
-    const genders = ["Femenino", "Masculino"];
-    const ages = ["Niño", "Adulto Joven", "Adulto", "Senior"];
-    const zones = ["Pasillo","Vitrina","Tienda","Perfumería","Zapatería","Joyería","Carteras","Tane","Caja"];
-    const personas = ["Solo","Pareja","Amigos","Familia"];
-
-    // Si zona no es válida, volver a 'all'
-    let filters = loadFilters();
-    if (filters.zona!=='all' && !zones.includes(filters.zona)) filters.zona='all';
-    // Persistimos la versión saneada en URL + storage (evita entrar con rango inválido)
-    saveFilters(filters, true);
-
-    function randomHour(){
-      const r = rand();
-      if (r < 0.15) return 10 + Math.floor(rand()*3);
-      if (r < 0.55) return 13 + Math.floor(rand()*3);
-      if (r < 0.80) return 16 + Math.floor(rand()*2);
-      return 18 + Math.floor(rand()*3);
-    }
-
-    // VISITAS (30 días)
-    const ALL_VISITS = (() => {
-      const visits = [];
-      for (let d=0; d<30; d++){
-        const dayBase = 55 + Math.floor(rand()*65);
-        for (let i=0; i<dayBase; i++){
-          const g = genders[Math.floor(rand()*genders.length)];
-          const a = ages[Math.floor(Math.pow(rand(), .6)*ages.length)];
-          const p = personas[Math.floor(Math.pow(rand(), .85)*personas.length)];
-          const unique = rand() > 0.18;
-          const len = 3 + Math.floor(rand()*5);
-          const path = [];
-          let current = ["Pasillo","Vitrina","Tienda"][Math.floor(rand()*3)];
-          for (let k=0; k<len; k++){
-            path.push(current);
-            const nextCandidates = zones.filter(z => z !== current);
-            current = nextCandidates[Math.floor(rand()*nextCandidates.length)];
-          }
-          if (rand() < .35 && !path.includes('Caja')) path[path.length-1] = 'Caja';
-          const dwell = 7 + Math.round(rand()*26) + (a==="Niño"? -2: a==="Senior"? +3: 0) + (p==="Familia"? +2: 0);
-          const startHour = randomHour();
-          visits.push({day:d, hour:startHour, gender:g, age:a, persona:p, path, dwell:Math.max(4,dwell), unique});
-        }
+    sidebar.addEventListener('mouseenter', safe(()=>{
+      if(!isMobile() && sidebar.classList.contains('mini')){
+        sidebar.classList.add('hovering'); applyBodyOffset(); forceResizeSoon();
       }
-      return visits;
+    }));
+    sidebar.addEventListener('mouseleave', safe(()=>{
+      if(!isMobile()){
+        sidebar.classList.remove('hovering'); applyBodyOffset(); forceResizeSoon();
+      }
+    }));
+
+    const reportes = document.getElementById('grp-reportes');
+    const head = reportes.querySelector('.collapse-head');
+    function setCollapse(open){ reportes.setAttribute('aria-expanded', String(open)); head.setAttribute('aria-expanded', String(open)); }
+    head.addEventListener('click', safe(()=>{
+      if (sidebar.classList.contains('mini') && !sidebar.classList.contains('hovering') && !isMobile()) return;
+      setCollapse(reportes.getAttribute('aria-expanded')!=='true');
+    }));
+    head.addEventListener('keydown', safe(e=>{
+      if(e.key==='Enter' || e.key===' '){
+        e.preventDefault();
+        if (sidebar.classList.contains('mini') && !sidebar.classList.contains('hovering') && !isMobile()) return;
+        setCollapse(reportes.getAttribute('aria-expanded')!=='true');
+      }
+    }));
+
+    (function markActive(){
+      const path = location.pathname.split('/').pop() || 'Comercial.html';
+      document.querySelectorAll('.nav a.item').forEach(a=>{
+        a.removeAttribute('aria-current'); a.classList.remove('active');
+        const file = (a.getAttribute('href')||'').split('?')[0].split('/').pop();
+        if(file === path){ a.setAttribute('aria-current','page'); a.classList.add('active'); }
+      });
+      const current = document.querySelector('.nav a.item[aria-current="page"] .label');
+      if (current && pageTitle){ pageTitle.textContent = current.textContent.trim(); }
     })();
 
-    // TICKETS desde VISITAS
-    function lognormal(mu, sigma){
-      const u1 = Math.max(Number.EPSILON, rand());
-      const u2 = Math.max(Number.EPSILON, rand());
-      const z = Math.sqrt(-2.0*Math.log(u1)) * Math.cos(2*Math.PI*u2);
-      return Math.exp(mu + sigma*z);
-    }
-    const ALL_TICKETS = (() => {
-      const out = []; let id = 1;
-      for (const v of ALL_VISITS){
-        if (rand() < 0.38){
-          const items = 1 + (rand()<.15?0:1) + (rand()<.55?1:0) + (rand()<.25?1:0) + (rand()<.10?1:0);
-          const base = 12000 + Math.floor(rand()*8000);
-          const noise = lognormal(Math.log(1.0), 0.35);
-          const amount = Math.round(Math.max(4000, items * base * noise));
-          const avgItemPrice = Math.round(amount / Math.max(1, items));
-          const path = v.path.slice();
-          let zoneInfluence = 'Tienda';
-          if (path.includes('Caja')){
-            const idx = path.lastIndexOf('Caja');
-            const prev = path.slice(0, idx).filter(z => z!=='Caja');
-            zoneInfluence = prev.length? prev[prev.length-1] : 'Tienda';
-          }else{
-            const cand = path.filter(z => z!=='Caja');
-            zoneInfluence = cand.length ? cand[Math.floor(rand()*cand.length)] : 'Tienda';
-          }
-          out.push({ ticketId:String(id++).padStart(6,'0'), day:v.day, hour:v.hour, zone:zoneInfluence,
-            items, amount, avgItemPrice, persona:v.persona, gender:v.gender, age:v.age, path:v.path });
-        }
+    document.addEventListener('click', safe((e)=>{
+      if (!isMobile()) return;
+      if (overlay.classList.contains('visible') && !sidebar.contains(e.target) && e.target!==openBtn && !openBtn.contains?.(e.target)) {
+        closeSidebar();
       }
-      return out;
-    })();
+    }), {passive:true});
 
-    // ====== Estado & helpers ======
-    const $ = s => document.querySelector(s);
+    /* =========================================================
+       DRAWER DE FILTROS (derecha)
+       ========================================================= */
+    const fOverlay = document.getElementById('filterOverlay');
+    const fDrawer  = document.getElementById('filterDrawer');
+    const openFiltersBtn  = document.getElementById('btn-open-filters');
+    const closeFiltersBtn = document.getElementById('btn-close-filters');
+    const applyBtn  = document.getElementById('btn-apply');
+    const resetBtn  = document.getElementById('btn-reset');
 
-    function updateFilterUI(){
-      $('#f-fecha').value = String(filters.range);
-      $('#f-genero').value = filters.genero;
-      $('#f-edad').value = filters.edad;
-      $('#f-zona').value = filters.zona;
-      $('#f-persona').value = filters.persona;
+    function openFilters(){ fOverlay.classList.add('visible'); fDrawer.classList.add('open'); document.body.style.overflow='hidden'; }
+    function closeFilters(){ fOverlay.classList.remove('visible'); fDrawer.classList.remove('open'); document.body.style.overflow=''; forceResizeSoon(); }
 
-      $('#chip-rango').textContent = `${filters.range} días`;
-      const actives = [];
-      if (filters.genero!=='all') actives.push(filters.genero);
-      if (filters.edad!=='all') actives.push(filters.edad);
-      if (filters.zona!=='all') actives.push(filters.zona);
-      if (filters.persona!=='all') actives.push(filters.persona);
-      $('#chip-filtros').textContent = actives.length? actives.join(' · ') : 'Sin filtros';
-    }
-    function getFiltered(){
-      const rangeNum = Math.min(30, Math.max(1, parseInt(filters.range,10) || 14));
-      const start = 30 - rangeNum;
-      const visits = ALL_VISITS.filter(v =>
-        v.day>=start &&
-        (filters.genero==='all' || v.gender===filters.genero) &&
-        (filters.edad==='all' || v.age===filters.edad) &&
-        (filters.zona==='all' || v.path.includes(filters.zona)) &&
-        (filters.persona==='all' || v.persona===filters.persona)
-      );
-      const tickets = ALL_TICKETS.filter(t =>
-        t.day>=start &&
-        (filters.genero==='all' || t.gender===filters.genero) &&
-        (filters.edad==='all' || t.age===filters.edad) &&
-        (filters.zona==='all' || t.zone===filters.zona) &&
-        (filters.persona==='all' || t.persona===filters.persona)
-      );
-      return { visits, tickets };
-    }
-    function sum(arr, sel){ return arr.reduce((s,x)=> s + (sel? sel(x): x), 0); }
+    ;['click','touchstart'].forEach(ev=>{
+      openFiltersBtn?.addEventListener(ev, safe(openFilters), {passive:true});
+      fOverlay?.addEventListener(ev, safe(closeFilters), {passive:true});
+      closeFiltersBtn?.addEventListener(ev, safe(closeFilters), {passive:true});
+    });
+    document.addEventListener('keydown', safe(e=>{
+      if(e.key==='Escape' && fOverlay.classList.contains('visible')) closeFilters();
+    }));
 
-    // ====== ECharts ======
-    const chTrend   = echarts.init(document.getElementById('ch-trend'));
-    const chMix     = echarts.init(document.getElementById('ch-mix-zone'));
-    const chBubble  = echarts.init(document.getElementById('ch-bubble'));
-    const chHeat    = echarts.init(document.getElementById('ch-heat'));
-    const chCross   = echarts.init(document.getElementById('ch-cross'));
-    const chHist    = echarts.init(document.getElementById('ch-hist'));
-    const chCEI     = echarts.init(document.getElementById('ch-cei'));
+    /* =========================================================
+       COMERCIAL (datos + charts + filtros funcionales)
+       ========================================================= */
+    window.addEventListener('DOMContentLoaded', safe(() => {
+      const $ = s => document.querySelector(s);
 
-    function wireLinks(f){
-      const map = [
-        ['lnk-bienvenida','Bienvenida.html'],
-        ['lnk-dashboard','Dashboard.html'],
-        ['lnk-recorridos','Recorridos.html'],
-        ['lnk-buyer','Buyer.html'],
-        ['lnk-staff','Staff.html'],
-        ['lnk-comercial','Comercial.html'],
-      ];
-      map.forEach(([id,base])=>{ const a=document.getElementById(id); if (a) a.href=buildHref(base,f); });
-    }
+      // Estado de filtros
+      const state = { range:14, genero:'all', edad:'all', zona:'all', persona:'all' };
 
-    function render(){
-      updateFilterUI(); wireLinks(filters);
-
-      const {visits, tickets} = getFiltered();
-
-      // Ventana previa
-      const prevStart = 30 - (Math.min(30, Math.max(1, parseInt(filters.range,10) || 14)) * 2);
-      const prevVisits = ALL_VISITS.filter(v =>
-        v.day>=prevStart && v.day < (30 - (parseInt(filters.range,10)||14)) &&
-        (filters.genero==='all' || v.gender===filters.genero) &&
-        (filters.edad==='all' || v.age===filters.edad) &&
-        (filters.zona==='all' || v.path.includes(filters.zona)) &&
-        (filters.persona==='all' || v.persona===filters.persona)
-      );
-      const prevTickets = ALL_TICKETS.filter(t =>
-        t.day>=prevStart && t.day < (30 - (parseInt(filters.range,10)||14)) &&
-        (filters.genero==='all' || t.gender===filters.genero) &&
-        (filters.edad==='all' || t.age===filters.edad) &&
-        (filters.zona==='all' || t.zone===filters.zona) &&
-        (filters.persona==='all' || t.persona===filters.persona)
-      );
-
-      // KPIs
-      const ventas = sum(tickets, t=>t.amount);
-      const ventasPrev = Math.max(1, sum(prevTickets, t=>t.amount));
-      const ticketsN = tickets.length;
-      const ticketsPrev = Math.max(1, prevTickets.length);
-      const atv = ventas / Math.max(1,ticketsN);
-      const atvPrev = ventasPrev / ticketsPrev;
-
-      const visitorsN = visits.length;
-      const visitorsPrev = Math.max(1, prevVisits.length);
-      const spv = ventas / Math.max(1, visitorsN);
-      const spvPrev = ventasPrev / visitorsPrev;
-
-      const upt = sum(tickets, t=>t.items) / Math.max(1, ticketsN);
-      const uptPrev = sum(prevTickets, t=>t.items) / Math.max(1, ticketsPrev);
-
-      // Yield por zona
-      const zonesList = filters.zona==='all' ? zones.filter(z=>z!=='Caja') : [filters.zona];
-      function yieldZona(z){
-        const vZ = visits.filter(v=>v.path.includes(z));
-        const tZ = tickets.filter(t=>t.zone===z);
-        const ventasZ = sum(tZ, t=>t.amount);
-        return ventasZ / Math.max(1, vZ.length);
-      }
-      const yields = zonesList.map(z=>yieldZona(z));
-      const yieldAvg = yields.length ? (sum(yields)/yields.length) : 0;
-
-      // CEI
-      const dwellMean = (sum(visits, v=>v.dwell)/Math.max(1,visits.length));
-      const denom = sum(visits, v=> v.dwell/Math.max(1,dwellMean));
-      const cei = ventas / Math.max(1, denom);
-
-      function varPct(curr, prev){ return ((curr - prev)/Math.max(1e-9, prev))*100; }
+      // Utiles
+      const rand = (seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280)(101);
+      const genders = ["Femenino", "Masculino"];
+      const ages = ["Niño", "Adulto Joven", "Adulto", "Senior"];
+      const zones = ["Pasillo","Vitrina","Tienda","Perfumería","Zapatería","Joyería","Carteras","Tane","Caja"];
+      const personas = ["Solo","Pareja","Amigos","Familia"];
       const nf = new Intl.NumberFormat('es-CL');
       const clp = n => '$'+ nf.format(Math.round(n));
-      function setK(idV, idVar, val, prev, isGoodUp=true, fmt=(x)=>x){
-        const delta = varPct(val, prev).toFixed(1);
-        document.getElementById(idV).textContent = fmt(val);
-        const el = document.getElementById(idVar);
-        const up = (isGoodUp? (val>=prev) : (val<=prev));
-        el.textContent = (up? '▲ ':'▼ ') + Math.abs(delta) + '%';
-        el.className = 'delta ' + (up? 'up':'down');
-      }
-      setK('kpi-sales','kpi-sales-var', ventas, ventasPrev, true, clp);
-      setK('kpi-tickets','kpi-tickets-var', ticketsN, ticketsPrev, true, x=>nf.format(x));
-      setK('kpi-atv','kpi-atv-var', atv, atvPrev, true, clp);
-      setK('kpi-upt','kpi-upt-var', upt, uptPrev, true, x=>x.toFixed(2));
-      setK('kpi-visitors','kpi-visitors-var', visitorsN, visitorsPrev, true, x=>nf.format(x));
-      setK('kpi-spv','kpi-spv-var', spv, spvPrev, true, clp);
-      setK('kpi-yield','kpi-yield-var', yieldAvg, yieldAvg*0.95 + 1, true, clp);
-      setK('kpi-cei','kpi-cei-var', cei, cei*0.94 + 1, true, clp);
+      function randomHour(){ const r = rand(); if (r < 0.15) return 10 + Math.floor(rand()*3); if (r < 0.55) return 13 + Math.floor(rand()*3); if (r < 0.80) return 16 + Math.floor(rand()*2); return 18 + Math.floor(rand()*3); }
 
-      // Tendencia Ventas & SPV
-      const rangeNum = Math.min(30, Math.max(1, parseInt(filters.range,10) || 14));
-      const days = Array.from({length: rangeNum}, (_,i)=>30-rangeNum+i);
-      const byDayTickets = d => tickets.filter(t=>t.day===d);
-      const byDayVisits  = d => visits.filter(v=>v.day===d);
-      const seriesSales = days.map(d => sum(byDayTickets(d), t=>t.amount));
-      const seriesSPV = days.map(d => {
-        const v = byDayVisits(d).length;
-        const s = sum(byDayTickets(d), t=>t.amount);
-        return s / Math.max(1, v);
-      });
-      chTrend.setOption({
-        tooltip:{trigger:'axis', axisPointer:{type:'cross'},
-          formatter:(p)=>{
-            const s = p.find(x=>x.seriesName==='Ventas');
-            const q = p.find(x=>x.seriesName==='SPV');
-            return `${p[0].axisValueLabel}<br/>Ventas: <b>${clp(s? s.data:0)}</b><br/>SPV: <b>${clp(q? q.data:0)}</b>`;
-          }},
-        grid:{left:46,right:46,top:26,bottom:32},
-        xAxis:{type:'category', data:days.map(d=>'D'+(d+1)), boundaryGap:false},
-        yAxis:[{type:'value', name:'CLP'}, {type:'value', name:'CLP/visitante'}],
-        dataZoom:[{type:'inside'},{type:'slider'}],
-        series:[
-          {name:'Ventas', type:'line', smooth:true, data:seriesSales, areaStyle:{} , yAxisIndex:0},
-          {name:'SPV', type:'line', smooth:true, data:seriesSPV, yAxisIndex:1}
-        ]
-      });
-
-      // Mix de ventas por zona (apilado por persona)
-      const topZones = (() => {
-        const zMap = new Map();
-        for (const t of tickets){ zMap.set(t.zone, (zMap.get(t.zone)||0) + t.amount); }
-        return Array.from(zMap.entries()).sort((a,b)=>b[1]-a[1]).filter(([z])=>z!=='Caja').slice(0,7).map(([z])=>z);
-      })();
-      const personasList = ["Solo","Pareja","Amigos","Familia"];
-      const personaSeries = personasList.map(pe => ({
-        name: pe, type:'bar', stack:'mix',
-        data: topZones.map(z => sum(tickets.filter(t=>t.zone===z && t.persona===pe), t=>t.amount))
-      }));
-      chMix.setOption({
-        tooltip:{trigger:'axis', formatter:(p)=>{
-          const total = p.reduce((s,x)=>s+x.data,0);
-          const lines = p.map(x => `${x.marker}${x.seriesName}: ${clp(x.data)} (${(x.data/Math.max(1,total)*100).toFixed(1)}%)`);
-          return `${p[0].axisValue}<br/>Total: <b>${clp(total)}</b><br/>` + lines.join('<br/>');
-        }},
-        legend:{top:0},
-        grid:{left:80,right:16,top:30,bottom:28},
-        xAxis:{type:'category', data: topZones},
-        yAxis:{type:'value'},
-        series: personaSeries
-      });
-      chMix.off('click'); chMix.on('click', (p)=>{ if (p.componentType==='series'){ filters.zona = p.name; saveFilters(filters, true); render(); } });
-
-      // Bubble UPT vs ATV por zona
-      const zoneAgg = topZones.map(z=>{
-        const tZ = tickets.filter(t=>t.zone===z);
-        const ventasZ = sum(tZ, t=>t.amount);
-        const atvZ = ventasZ/Math.max(1,tZ.length);
-        const uptZ = sum(tZ, t=>t.items)/Math.max(1,tZ.length);
-        return {z, atvZ, uptZ, ventasZ};
-      });
-      chBubble.setOption({
-        tooltip:{formatter:(p)=> `${p.data.name}<br/>UPT: <b>${p.data.value[0].toFixed(2)}</b><br/>Ticket Promedio: <b>${clp(p.data.value[1])}</b><br/>Ventas: <b>${clp(p.data.value[2])}</b>`},
-        grid:{left:46,right:18,top:20,bottom:36},
-        xAxis:{name:'UPT', type:'value'},
-        yAxis:{name:'Ticket Promedio (CLP)', type:'value'},
-        series:[{
-          type:'scatter',
-          data: zoneAgg.map(o => ({name:o.z, value:[o.uptZ, o.atvZ, o.ventasZ], symbolSize: Math.max(12, Math.sqrt(o.ventasZ)/40)}))
-        }]
-      });
-
-      // Heatmap ventas por hora × zona
-      const hours = Array.from({length:12},(_,i)=>10+i);
-      const heatData = [];
-      for (let h of hours){
-        for (let z of zones){
-          const amt = sum(tickets.filter(t=>t.hour===h && t.zone===z), t=>t.amount);
-          heatData.push([zones.indexOf(z), hours.indexOf(h), Math.round(amt)]);
-        }
-      }
-      chHeat.setOption({
-        tooltip:{formatter:(p)=> `${zones[p.value[0]]} · ${hours[p.value[1]]}:00<br/><b>${clp(p.value[2])}</b>`},
-        grid:{left:90,right:16,top:30,bottom:40},
-        xAxis:{type:'category', data:zones, splitArea:{show:true}},
-        yAxis:{type:'category', data:hours.map(h=>h+":00"), splitArea:{show:true}},
-        visualMap:{min:0, max:Math.max(50000, Math.ceil(Math.max(...heatData.map(v=>v[2])))), calculable:true, orient:'horizontal', left:'center', bottom:0},
-        series:[{type:'heatmap', data:heatData}]
-      });
-      chHeat.off('click'); chHeat.on('click', p => { const z = zones[p.value[0]]; if (z){ filters.zona=z; saveFilters(filters, true); render(); } });
-
-      // Co-ocurrencia de categorías
-      function compress(path){ const out=[]; for(const z of path){ if(out[out.length-1]!==z) out.push(z); } return out; }
-      const co = new Map();
-      for (const t of tickets){
-        const pth = compress(t.path.filter(z=>z!=='Caja'));
-        const set = new Set(pth);
-        const arr = Array.from(set);
-        for (let i=0;i<arr.length;i++){
-          for (let j=i+1;j<arr.length;j++){
-            const a=arr[i], b=arr[j];
-            const k1=a+'|'+b, k2=b+'|'+a;
-            co.set(k1, (co.get(k1)||0)+1);
-            co.set(k2, (co.get(k2)||0)+1);
+      // VISITAS
+      const ALL_VISITS = (() => {
+        const visits = [];
+        for (let d=0; d<30; d++){
+          const dayBase = 55 + Math.floor(rand()*65);
+          for (let i=0; i<dayBase; i++){
+            const g = genders[Math.floor(rand()*genders.length)];
+            const a = ages[Math.floor(Math.pow(rand(), .6)*ages.length)];
+            const p = personas[Math.floor(Math.pow(rand(), .85)*personas.length)];
+            const unique = rand() > 0.18;
+            const len = 3 + Math.floor(rand()*5);
+            const path = [];
+            let current = ["Pasillo","Vitrina","Tienda"][Math.floor(rand()*3)];
+            for (let k=0; k<len; k++){
+              path.push(current);
+              const nextCandidates = zones.filter(z => z !== current);
+              current = nextCandidates[Math.floor(rand()*nextCandidates.length)];
+            }
+            if (rand() < .35 && !path.includes('Caja')) path[path.length-1] = 'Caja';
+            const dwell = 7 + Math.round(rand()*26) + (a==="Niño"? -2: a==="Senior"? +3: 0) + (p==="Familia"? +2: 0);
+            const startHour = randomHour();
+            visits.push({day:d, hour:startHour, gender:g, age:a, persona:p, path, dwell:Math.max(4,dwell), unique});
           }
         }
-      }
-      const topForCross = zones.filter(z=>z!=='Caja');
-      const idx = Object.fromEntries(topForCross.map((z,i)=>[z,i]));
-      const crossSeries=[];
-      for (const a of topForCross){
-        for (const b of topForCross){
-          const v = (a===b)? 0 : (co.get(a+'|'+b)||0);
-          crossSeries.push([idx[a], idx[b], v]);
+        return visits;
+      })();
+
+      // Tickets sintéticos
+      function lognormal(mu, sigma){ const u1=Math.max(Number.EPSILON, rand()); const u2=Math.max(Number.EPSILON, rand()); const z=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2); return Math.exp(mu + sigma*z); }
+      const ALL_TICKETS = (() => {
+        const out = []; let id = 1;
+        for (const v of ALL_VISITS){
+          if (rand() < 0.38){
+            const items = 1 + (rand()<.15?0:1) + (rand()<.55?1:0) + (rand()<.25?1:0) + (rand()<.10?1:0);
+            const base = 12000 + Math.floor(rand()*8000);
+            const noise = lognormal(Math.log(1.0), 0.35);
+            const amount = Math.round(Math.max(4000, items * base * noise));
+            const path = v.path.slice();
+            let zoneInfluence = 'Tienda';
+            if (path.includes('Caja')){
+              const idx = path.lastIndexOf('Caja');
+              const prev = path.slice(0, idx).filter(z => z!=='Caja');
+              zoneInfluence = prev.length? prev[prev.length-1] : 'Tienda';
+            } else {
+              const cand = path.filter(z => z!=='Caja');
+              zoneInfluence = cand.length ? cand[Math.floor(rand()*cand.length)] : 'Tienda';
+            }
+            out.push({ ticketId:String(id++).padStart(6,'0'), day:v.day, hour:v.hour, zone:zoneInfluence,
+              items, amount, avgItemPrice: Math.round(amount/Math.max(1,items)),
+              persona:v.persona, gender:v.gender, age:v.age, path:v.path });
+          }
         }
+        return out;
+      })();
+
+      function getFiltered(){
+        const start = 30 - state.range;
+        const visits = ALL_VISITS.filter(v =>
+          v.day>=start &&
+          (state.genero==='all' || v.gender===state.genero) &&
+          (state.edad==='all' || v.age===state.edad) &&
+          (state.zona==='all' || v.path.includes(state.zona)) &&
+          (state.persona==='all' || v.persona===state.persona)
+        );
+        const tickets = ALL_TICKETS.filter(t =>
+          t.day>=start &&
+          (state.genero==='all' || t.gender===state.genero) &&
+          (state.edad==='all' || t.age===state.edad) &&
+          (state.zona==='all' || t.zone===state.zona) &&
+          (state.persona==='all' || t.persona===state.persona)
+        );
+        return { visits, tickets };
       }
-      chCross.setOption({
-        tooltip:{formatter:(p)=> `${topForCross[p.value[0]]} ↔ ${topForCross[p.value[1]]}: <b>${p.value[2]}</b>`},
-        grid:{left:90,right:16,top:40,bottom:40},
-        xAxis:{type:'category', data:topForCross, axisLabel:{rotate:30}},
-        yAxis:{type:'category', data:topForCross},
-        visualMap:{min:0, max:Math.max(3, Math.ceil(Math.max(...crossSeries.map(v=>v[2])))), calculable:true, orient:'horizontal', left:'center', bottom:0},
-        series:[{type:'heatmap', data:crossSeries}]
-      });
+      function sum(arr, sel){ return arr.reduce((s,x)=> s + (sel? sel(x): x), 0); }
 
-      // Histograma tickets
-      const amounts = tickets.map(t=>t.amount).sort((a,b)=>a-b);
-      const minA = amounts.length? amounts[0]:0;
-      const maxA = amounts.length? amounts[amounts.length-1]:1;
-      const bins = 10;
-      const step = Math.max(1, Math.ceil((maxA-minA)/bins));
-      const hist = new Array(bins).fill(0);
-      for (const a of amounts){ const i = Math.min(bins-1, Math.floor((a-minA)/step)); hist[i] ++; }
-      function pctile(arr, p){
-        if (!arr.length) return 0;
-        const pos = (arr.length-1)*p; const lo=Math.floor(pos), hi=Math.ceil(pos);
-        if (lo===hi) return arr[lo];
-        return arr[lo] + (arr[hi]-arr[lo])*(pos-lo);
-      }
-      const p25 = pctile(amounts, .25), p50=pctile(amounts,.5), p75=pctile(amounts,.75);
-      chHist.setOption({
-        tooltip:{trigger:'axis', formatter:(p)=> {
-          const i = p[0].dataIndex; const l=minA + i*step; const r=l+step-1;
-          return `${clp(l)} – ${clp(r)}: <b>${p[0].data}</b>`;
-        }},
-        grid:{left:46,right:16,top:20,bottom:28},
-        xAxis:{type:'category', data: Array.from({length:bins},(_,i)=> `${clp(minA+i*step)}–${clp(minA+(i+1)*step-1)}`)},
-        yAxis:{type:'value'},
-        series:[{type:'bar', data:hist,
-          markLine:{symbol:'none', data:[
-            {xAxis: Math.max(0, Math.floor((p25-minA)/step)), label:{formatter:'P25'}},
-            {xAxis: Math.max(0, Math.floor((p50-minA)/step)), label:{formatter:'P50'}},
-            {xAxis: Math.max(0, Math.floor((p75-minA)/step)), label:{formatter:'P75'}},
-          ]}
-        }]
-      });
-
-      // Ranking CEI por zona
-      const ceiByZone = zones.filter(z=>z!=='Caja').map(z=>{
-        const vZ = visits.filter(v=>v.path.includes(z));
-        const tZ = tickets.filter(t=>t.zone===z);
-        const ventasZ = sum(tZ, t=>t.amount);
-        const dwellMeanLocal = (sum(visits, v=>v.dwell)/Math.max(1,visits.length));
-        const denomZ = sum(vZ, v=> v.dwell / Math.max(1, dwellMeanLocal));
-        const ceiZ = ventasZ / Math.max(1, denomZ);
-        return {z, ceiZ, spvZ: ventasZ / Math.max(1, vZ.length)};
-      }).sort((a,b)=>b.ceiZ - a.ceiZ);
-      chCEI.setOption({
-        tooltip:{formatter:(p)=> {
-          const obj = ceiByZone.find(x=>x.z===p.name) || {spvZ:0};
-          return `${p.name}<br/>CEI: <b>${clp(p.data)}</b><br/>SPV: <b>${clp(obj.spvZ)}</b>`;
-        }},
-        grid:{left:120,right:16,top:20,bottom:28},
-        xAxis:{type:'value'},
-        yAxis:{type:'category', data: ceiByZone.map(o=>o.z)},
-        series:[{type:'bar', data: ceiByZone.map(o=>o.ceiZ), label:{show:true, position:'right', formatter:(p)=> clp(p.value)} }]
-      });
-
-      // Insights
-      const insights = [];
-      if (ceiByZone[0]) insights.push(`La zona con mejor CEI es <b>${ceiByZone[0].z}</b> (${clp(ceiByZone[0].ceiZ)}).`);
-      insights.push(`El <b>SPV</b> es <b>${clp(spv)}</b> (${varPct(spv, spvPrev)>=0? '▲':''}${Math.abs(varPct(spv, spvPrev)).toFixed(1)}% vs periodo previo).`);
-      const byHour = Array.from({length:12},(_,i)=>10+i).map(h=>({h, amt: sum(tickets.filter(t=>t.hour===h), t=>t.amount)}));
-      const bestHour = byHour.reduce((a,b)=> b.amt>a.amt? b:a, {h:'–',amt:0});
-      if (bestHour.amt>0) insights.push(`La franja de mayor venta es <b>${bestHour.h}:00</b> con <b>${clp(bestHour.amt)}</b>.`);
-      const zoneAgg2 = topZones.map(z=>{
-        const tZ = tickets.filter(t=>t.zone===z);
-        const ventasZ = sum(tZ, t=>t.amount), atvZ = ventasZ/Math.max(1,tZ.length), uptZ = sum(tZ, t=>t.items)/Math.max(1,tZ.length);
-        return {z, score: uptZ*atvZ, uptZ, atvZ};
-      }).sort((a,b)=>b.score-a.score)[0];
-      if (zoneAgg2) insights.push(`Oportunidad: <b>${zoneAgg2.z}</b> combina Art. x Ticket <b>${zoneAgg2.uptZ.toFixed(2)}</b> y Ticket promedio <b>${clp(zoneAgg2.atvZ)}</b>.`);
-      document.getElementById('insights-list').innerHTML = insights.map(x=>`<li>${x}</li>`).join('');
-    }
-
-    // ===== Export CSV =====
-    function exportCSV(){
-      const {visits, tickets} = getFiltered();
-      const dwellMean = (sum(visits, v=>v.dwell)/Math.max(1, visits.length));
-      const spv = sum(tickets, t=>t.amount) / Math.max(1, visits.length);
-
-      const byVisitKey = new Map();
-      for (const v of visits){
-        const key = `${v.day}|${v.hour}|${v.gender}|${v.age}|${v.persona}`;
-        const cur = byVisitKey.get(key);
-        if (!cur || v.dwell>cur) byVisitKey.set(key, v.dwell);
+      // Instancias de charts
+      let chTrend, chMix, chBubble, chHeat, chCross, chHist, chCEI;
+      function ensureCharts(){
+        chTrend  = chTrend  || echarts.init(document.getElementById('ch-trend'));
+        chMix    = chMix    || echarts.init(document.getElementById('ch-mix-zone'));
+        chBubble = chBubble || echarts.init(document.getElementById('ch-bubble'));
+        chHeat   = chHeat   || echarts.init(document.getElementById('ch-heat'));
+        chCross  = chCross  || echarts.init(document.getElementById('ch-cross'));
+        chHist   = chHist   || echarts.init(document.getElementById('ch-hist'));
+        chCEI    = chCEI    || echarts.init(document.getElementById('ch-cei'));
       }
 
-      const rows = tickets.map(t=>{
-        const key = `${t.day}|${t.hour}|${t.gender}|${t.age}|${t.persona}`;
-        const dwell = byVisitKey.get(key) || dwellMean;
-        const cei_factor = dwell / Math.max(1, dwellMean);
-        return {
-          day: t.day+1, hour:t.hour, gender:t.gender, age:t.age, persona:t.persona,
-          zone:t.zone, items:t.items, amount:t.amount, avgItemPrice:t.avgItemPrice,
-          spv_at_visit: Math.round(spv), cei_factor: +(cei_factor.toFixed(3))
-        };
-      });
+      function render(){
+        ensureCharts();
+        const {visits, tickets} = getFiltered();
 
-      const header = Object.keys(rows[0]||{
-        day:'',hour:'',gender:'',age:'',persona:'',zone:'',items:'',amount:'',avgItemPrice:'',spv_at_visit:'',cei_factor:''
-      }).join(',');
-      const body = rows.map(r=> Object.values(r).join(',')).join('\n');
-      const blob = new Blob([header+'\n'+body], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download='comercial_dataset_filtrado.csv'; a.click(); URL.revokeObjectURL(url);
-    }
+        // Ventana previa para variaciones
+        const prev = (()=> {
+          const start = 30 - state.range*2, end = 30 - state.range;
+          const pv = ALL_VISITS.filter(v =>
+            v.day>=start && v.day<end &&
+            (state.genero==='all' || v.gender===state.genero) &&
+            (state.edad==='all' || v.age===state.edad) &&
+            (state.zona==='all' || v.path.includes(state.zona)) &&
+            (state.persona==='all' || v.persona===state.persona)
+          );
+          const pt = ALL_TICKETS.filter(t =>
+            t.day>=start && t.day<end &&
+            (state.genero==='all' || t.gender===state.genero) &&
+            (state.edad==='all' || t.age===state.edad) &&
+            (state.zona==='all' || t.zone===state.zona) &&
+            (state.persona==='all' || t.persona===state.persona)
+          );
+          return {pv, pt};
+        })();
 
-    // ===== Drawer & resize =====
-    const sidebar = document.getElementById('sidebar');
-    const openBtn = document.getElementById('openNav');
-    const closeBtn = document.getElementById('closeNav');
-    const filtersDetails = document.getElementById('filters');
-    const isMobile = () => window.matchMedia('(max-width:900px)').matches;
-    const charts = [chTrend,chMix,chBubble,chHeat,chCross,chHist,chCEI];
-    const forceResize = () => charts.forEach(c=>c.resize());
-    const openSidebar = safe(()=> { sidebar.classList.add('open'); setTimeout(forceResize, 60); });
-    const closeSidebar = safe(()=> { sidebar.classList.remove('open'); setTimeout(forceResize, 60); });
+        // KPIs
+        const ventas = sum(tickets, t=>t.amount);
+        const ventasPrev = Math.max(1, sum(prev.pt, t=>t.amount));
+        const ticketsN = tickets.length, ticketsPrev = Math.max(1, prev.pt.length);
+        const atv = ventas / Math.max(1, ticketsN), atvPrev = ventasPrev / ticketsPrev;
 
-    // ===== Eventos =====
-    window.addEventListener('DOMContentLoaded', safe(()=>{
-      // al iniciar, garantizamos filtros válidos escritos en URL y storage
-      saveFilters(filters, true);
-      wireLinks(filters); updateFilterUI();
+        const visitorsN = visits.length, visitorsPrev = Math.max(1, prev.pv.length);
+        const spv = ventas / Math.max(1, visitorsN), spvPrev = ventasPrev / visitorsPrev;
 
-      ['click','touchstart'].forEach(ev=>{
-        openBtn?.addEventListener(ev, openSidebar, {passive:true});
-        closeBtn?.addEventListener(ev, closeSidebar, {passive:true});
-      });
-      document.addEventListener('click', safe((e)=>{
-        if (!isMobile()) return;
-        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !openBtn.contains(e.target)) {
-          sidebar.classList.remove('open'); setTimeout(forceResize, 60);
+        const upt = sum(tickets, t=>t.items) / Math.max(1, ticketsN);
+        const uptPrev = sum(prev.pt, t=>t.items) / Math.max(1, ticketsPrev);
+
+        // Yield por zona
+        const zonesList = state.zona==='all' ? zones.filter(z=>z!=='Caja') : [state.zona];
+        function yieldZona(z){
+          const vZ = visits.filter(v=>v.path.includes(z));
+          const tZ = tickets.filter(t=>t.zone===z);
+          return sum(tZ, t=>t.amount) / Math.max(1, vZ.length);
         }
-      }), {passive:true});
-      filtersDetails.addEventListener('toggle', safe(()=> setTimeout(forceResize, 60)));
-      window.addEventListener('resize', safe(()=> setTimeout(forceResize, 30)));
+        const yields = zonesList.map(z=>yieldZona(z));
+        const yieldAvg = yields.length ? (sum(yields)/yields.length) : 0;
 
+        // CEI
+        const dwellMean = (sum(visits, v=>v.dwell)/Math.max(1,visits.length));
+        const denom = sum(visits, v=> v.dwell/Math.max(1,dwellMean));
+        const cei = ventas / Math.max(1, denom);
+
+        function varPct(curr, prev){ return ((curr - prev)/Math.max(1e-9, prev))*100; }
+        function setK(idV, idVar, val, prevVal, isGoodUp=true, fmt=(x)=>x){
+          const delta = varPct(val, prevVal).toFixed(1);
+          document.getElementById(idV).textContent = fmt(val);
+          const el = document.getElementById(idVar);
+          const up = (isGoodUp? (val>=prevVal) : (val<=prevVal));
+          el.textContent = (up? '▲ ':'▼ ') + Math.abs(delta) + '%';
+          el.className = 'delta ' + (up? 'up':'down');
+        }
+        setK('kpi-sales','kpi-sales-var', ventas, ventasPrev, true, clp);
+        setK('kpi-tickets','kpi-tickets-var', ticketsN, ticketsPrev, true, x=>nf.format(x));
+        setK('kpi-atv','kpi-atv-var', atv, atvPrev, true, clp);
+        setK('kpi-upt','kpi-upt-var', upt, uptPrev, true, x=>x.toFixed(2));
+        setK('kpi-visitors','kpi-visitors-var', visitorsN, visitorsPrev, true, x=>nf.format(x));
+        setK('kpi-spv','kpi-spv-var', spv, spvPrev, true, clp);
+        setK('kpi-yield','kpi-yield-var', yieldAvg, yieldAvg*0.95 + 1, true, clp);
+        setK('kpi-cei','kpi-cei-var', cei, cei*0.94 + 1, true, clp);
+
+        // Tendencia Ventas & SPV
+        const days = Array.from({length: state.range}, (_,i)=>30-state.range+i);
+        const byDayTickets = d => tickets.filter(t=>t.day===d);
+        const byDayVisits  = d => visits.filter(v=>v.day===d);
+        const seriesSales = days.map(d => sum(byDayTickets(d), t=>t.amount));
+        const seriesSPV = days.map(d => {
+          const v = byDayVisits(d).length;
+          const s = sum(byDayTickets(d), t=>t.amount);
+          return s / Math.max(1, v);
+        });
+        chTrend.setOption({
+          tooltip:{trigger:'axis', axisPointer:{type:'cross'},
+            formatter:(p)=>{
+              const s = p.find(x=>x.seriesName==='Ventas');
+              const q = p.find(x=>x.seriesName==='SPV');
+              return `${p[0].axisValueLabel}<br/>Ventas: <b>${clp(s? s.data:0)}</b><br/>SPV: <b>${clp(q? q.data:0)}</b>`;
+            }},
+          grid:{left:46,right:46,top:26,bottom:32},
+          xAxis:{type:'category', data:days.map(d=>'D'+(d+1)), boundaryGap:false},
+          yAxis:[{type:'value', name:'CLP'}, {type:'value', name:'CLP/visitante'}],
+          dataZoom:[{type:'inside'},{type:'slider'}],
+          series:[
+            {name:'Ventas', type:'line', smooth:true, data:seriesSales, areaStyle:{} , yAxisIndex:0},
+            {name:'SPV', type:'line', smooth:true, data:seriesSPV, yAxisIndex:1}
+          ]
+        });
+
+        // Mix por zona (apilado por persona)
+        const topZones = (() => {
+          const zMap = new Map();
+          for (const t of tickets){ zMap.set(t.zone, (zMap.get(t.zone)||0) + t.amount); }
+          return Array.from(zMap.entries()).sort((a,b)=>b[1]-a[1]).filter(([z])=>z!=='Caja').slice(0,7).map(([z])=>z);
+        })();
+        const personasList = ["Solo","Pareja","Amigos","Familia"];
+        const personaSeries = personasList.map(pe => ({
+          name: pe, type:'bar', stack:'mix',
+          data: topZones.map(z => sum(tickets.filter(t=>t.zone===z && t.persona===pe), t=>t.amount))
+        }));
+        chMix.setOption({
+          tooltip:{trigger:'axis', formatter:(p)=>{
+            const total = p.reduce((s,x)=>s+x.data,0);
+            const lines = p.map(x => `${x.marker}${x.seriesName}: ${clp(x.data)} (${(x.data/Math.max(1,total)*100).toFixed(1)}%)`);
+            return `${p[0].axisValue}<br/>Total: <b>${clp(total)}</b><br/>` + lines.join('<br/>');
+          }},
+          legend:{top:0},
+          grid:{left:80,right:16,top:30,bottom:28},
+          xAxis:{type:'category', data: topZones},
+          yAxis:{type:'value'},
+          series: personaSeries
+        });
+        chMix.off('click'); chMix.on('click', (p)=>{ if (p.componentType==='series'){ document.getElementById('f-zona').value = p.name; state.zona = p.name; render(); forceResizeSoon(); } });
+
+        // Bubble UPT vs ATV por zona
+        const zoneAgg = topZones.map(z=>{
+          const tZ = tickets.filter(t=>t.zone===z);
+          const ventasZ = sum(tZ, t=>t.amount);
+          const atvZ = ventasZ/Math.max(1,tZ.length);
+          const uptZ = sum(tZ, t=>t.items)/Math.max(1,tZ.length);
+          return {z, atvZ, uptZ, ventasZ};
+        });
+        chBubble.setOption({
+          tooltip:{formatter:(p)=> `${p.data.name}<br/>UPT: <b>${p.data.value[0].toFixed(2)}</b><br/>Ticket Promedio: <b>${clp(p.data.value[1])}</b><br/>Ventas: <b>${clp(p.data.value[2])}</b>`},
+          grid:{left:46,right:18,top:20,bottom:36},
+          xAxis:{name:'UPT', type:'value'},
+          yAxis:{name:'Ticket Promedio (CLP)', type:'value'},
+          series:[{
+            type:'scatter',
+            data: zoneAgg.map(o => ({name:o.z, value:[o.uptZ, o.atvZ, o.ventasZ], symbolSize: Math.max(12, Math.sqrt(o.ventasZ)/40)}))
+          }]
+        });
+
+        // Heatmap ventas por hora × zona
+        const hours = Array.from({length:12},(_,i)=>10+i);
+        const heatData = [];
+        for (let h of hours){
+          for (let z of zones){
+            const amt = sum(tickets.filter(t=>t.hour===h && t.zone===z), t=>t.amount);
+            heatData.push([zones.indexOf(z), hours.indexOf(h), Math.round(amt)]);
+          }
+        }
+        chHeat.setOption({
+          tooltip:{formatter:(p)=> `${zones[p.value[0]]} · ${hours[p.value[1]]}:00<br/><b>${clp(p.value[2])}</b>`},
+          grid:{left:90,right:16,top:30,bottom:40},
+          xAxis:{type:'category', data:zones, splitArea:{show:true}},
+          yAxis:{type:'category', data:hours.map(h=>h+":00"), splitArea:{show:true}},
+          visualMap:{min:0, max:Math.max(50000, Math.ceil(Math.max(...heatData.map(v=>v[2])))), calculable:true, orient:'horizontal', left:'center', bottom:0},
+          series:[{type:'heatmap', data:heatData}]
+        });
+        chHeat.off('click'); chHeat.on('click', p => { const z = zones[p.value[0]]; if (z){ document.getElementById('f-zona').value = z; state.zona=z; render(); forceResizeSoon(); } });
+
+        // Co-ocurrencia de categorías
+        function compress(path){ const out=[]; for(const z of path){ if(out[out.length-1]!==z) out.push(z); } return out; }
+        const co = new Map();
+        for (const t of tickets){
+          const pth = compress(t.path.filter(z=>z!=='Caja'));
+          const set = new Set(pth);
+          const arr = Array.from(set);
+          for (let i=0;i<arr.length;i++){
+            for (let j=i+1;j<arr.length;j++){
+              const a=arr[i], b=arr[j];
+              const k1=a+'|'+b, k2=b+'|'+a;
+              co.set(k1, (co.get(k1)||0)+1);
+              co.set(k2, (co.get(k2)||0)+1);
+            }
+          }
+        }
+        const topForCross = zones.filter(z=>z!=='Caja');
+        const idx = Object.fromEntries(topForCross.map((z,i)=>[z,i]));
+        const crossSeries=[];
+        for (const a of topForCross){
+          for (const b of topForCross){
+            const v = (a===b)? 0 : (co.get(a+'|'+b)||0);
+            crossSeries.push([idx[a], idx[b], v]);
+          }
+        }
+        chCross.setOption({
+          tooltip:{formatter:(p)=> `${topForCross[p.value[0]]} ↔ ${topForCross[p.value[1]]}: <b>${p.value[2]}</b>`},
+          grid:{left:90,right:16,top:40,bottom:40},
+          xAxis:{type:'category', data:topForCross, axisLabel:{rotate:30}},
+          yAxis:{type:'category', data:topForCross},
+          visualMap:{min:0, max:Math.max(3, Math.ceil(Math.max(...crossSeries.map(v=>v[2])))), calculable:true, orient:'horizontal', left:'center', bottom:0},
+          series:[{type:'heatmap', data:crossSeries}]
+        });
+
+        // Histograma tickets
+        const amounts = tickets.map(t=>t.amount).sort((a,b)=>a-b);
+        const minA = amounts.length? amounts[0]:0;
+        const maxA = amounts.length? amounts[amounts.length-1]:1;
+        const bins = 10;
+        const step = Math.max(1, Math.ceil((maxA-minA)/bins));
+        const hist = new Array(bins).fill(0);
+        for (const a of amounts){ const i = Math.min(bins-1, Math.floor((a-minA)/step)); hist[i] ++; }
+        function pctile(arr, p){ if (!arr.length) return 0; const pos=(arr.length-1)*p; const lo=Math.floor(pos), hi=Math.ceil(pos); if(lo===hi) return arr[lo]; return arr[lo]+(arr[hi]-arr[lo])*(pos-lo); }
+        const p25=pctile(amounts,.25), p50=pctile(amounts,.5), p75=pctile(amounts,.75);
+        chHist.setOption({
+          tooltip:{trigger:'axis', formatter:(p)=> {
+            const i = p[0].dataIndex; const l=minA + i*step; const r=l+step-1;
+            return `${clp(l)} – ${clp(r)}: <b>${p[0].data}</b>`;
+          }},
+          grid:{left:46,right:16,top:20,bottom:28},
+          xAxis:{type:'category', data: Array.from({length:bins},(_,i)=> `${clp(minA+i*step)}–${clp(minA+(i+1)*step-1)}`)},
+          yAxis:{type:'value'},
+          series:[{type:'bar', data:hist,
+            markLine:{symbol:'none', data:[
+              {xAxis: Math.max(0, Math.floor((p25-minA)/step)), label:{formatter:'P25'}},
+              {xAxis: Math.max(0, Math.floor((p50-minA)/step)), label:{formatter:'P50'}},
+              {xAxis: Math.max(0, Math.floor((p75-minA)/step)), label:{formatter:'P75'}},
+            ]}
+          }]
+        });
+
+        // Ranking CEI por zona
+        const ceiByZone = zones.filter(z=>z!=='Caja').map(z=>{
+          const vZ = visits.filter(v=>v.path.includes(z));
+          const tZ = tickets.filter(t=>t.zone===z);
+          const ventasZ = sum(tZ, t=>t.amount);
+          const dwellMeanLocal = (sum(visits, v=>v.dwell)/Math.max(1,visits.length));
+          const denomZ = sum(vZ, v=> v.dwell / Math.max(1, dwellMeanLocal));
+          const ceiZ = ventasZ / Math.max(1, denomZ);
+          return {z, ceiZ, spvZ: ventasZ / Math.max(1, vZ.length)};
+        }).sort((a,b)=>b.ceiZ - a.ceiZ);
+        chCEI.setOption({
+          tooltip:{formatter:(p)=> {
+            const obj = ceiByZone.find(x=>x.z===p.name) || {spvZ:0};
+            return `${p.name}<br/>CEI: <b>${clp(p.data)}</b><br/>SPV: <b>${clp(obj.spvZ)}</b>`;
+          }},
+          grid:{left:120,right:16,top:20,bottom:28},
+          xAxis:{type:'value'},
+          yAxis:{type:'category', data: ceiByZone.map(o=>o.z)},
+          series:[{type:'bar', data: ceiByZone.map(o=>o.ceiZ), label:{show:true, position:'right', formatter:(p)=> clp(p.value)} }]
+        });
+
+        // Insights (corregido template literal)
+        const insights = [];
+        if (ceiByZone[0]) insights.push(`La zona con mejor CEI es <b>${ceiByZone[0].z}</b> (${clp(ceiByZone[0].ceiZ)}).`);
+        const spvDelta = varPct(spv, spvPrev).toFixed(1);
+        insights.push(`El <b>SPV</b> es <b>${clp(spv)}</b> (${spvDelta}% vs período previo).`);
+        const byHour = Array.from({length:12},(_,i)=>10+i).map(h=>({h, amt: sum(tickets.filter(t=>t.hour===h), t=>t.amount)}));
+        const bestHour = byHour.reduce((a,b)=> b.amt>a.amt? b:a, {h:'–',amt:0});
+        if (bestHour.amt>0) insights.push(`La franja de mayor venta es <b>${bestHour.h}:00</b> con <b>${clp(bestHour.amt)}</b>.`);
+        const topZones2 = ceiByZone.map(z=>z.z).slice(0,6);
+        const opp = topZones2.map(z=>{
+          const tZ = tickets.filter(t=>t.zone===z);
+          const ventasZ = sum(tZ, t=>t.amount), atvZ = ventasZ/Math.max(1,tZ.length), uptZ = sum(tZ, t=>t.items)/Math.max(1,tZ.length);
+          return {z, score: uptZ*atvZ, uptZ, atvZ};
+        }).sort((a,b)=>b.score-a.score)[0];
+        if (opp) insights.push(`Oportunidad: <b>${opp.z}</b> combina Art. x Ticket <b>${opp.uptZ.toFixed(2)}</b> y Ticket promedio <b>${clp(opp.atvZ)}</b>.`);
+        document.getElementById('insights-list').innerHTML = insights.map(x=>`<li>${x}</li>`).join('');
+      }
+
+      /* === Export CSV (con filtros aplicados) === */
+      function exportCSV(){
+        const { visits, tickets } = getFiltered();
+        const dwellMean = (sum(visits, v=>v.dwell)/Math.max(1, visits.length));
+        const spv = sum(tickets, t=>t.amount) / Math.max(1, visits.length);
+
+        const byVisitKey = new Map();
+        for (const v of visits){
+          const key = `${v.day}|${v.hour}|${v.gender}|${v.age}|${v.persona}`;
+          const cur = byVisitKey.get(key);
+          if (!cur || v.dwell>cur) byVisitKey.set(key, v.dwell);
+        }
+
+        const rows = tickets.map(t=>{
+          const key = `${t.day}|${t.hour}|${t.gender}|${t.age}|${t.persona}`;
+          const dwell = byVisitKey.get(key) || dwellMean;
+          const cei_factor = dwell / Math.max(1, dwellMean);
+          return {
+            day: t.day+1, hour:t.hour, gender:t.gender, age:t.age, persona:t.persona,
+            zone:t.zone, items:t.items, amount:t.amount, avgItemPrice:t.avgItemPrice,
+            spv_at_visit: Math.round(spv), cei_factor: +(cei_factor.toFixed(3))
+          };
+        });
+
+        const header = Object.keys(rows[0]||{
+          day:'',hour:'',gender:'',age:'',persona:'',zone:'',items:'',amount:'',avgItemPrice:'',spv_at_visit:'',cei_factor:''
+        }).join(',');
+        const body = rows.map(r=> Object.values(r).join(',')).join('\n');
+        const blob = new Blob([header+'\n'+body], {type:'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='comercial_dataset_filtrado.csv'; a.click(); URL.revokeObjectURL(url);
+      }
+
+      /* === Resize de charts al cambiar layout === */
+      function forceResize(){
+        [chTrend,chMix,chBubble,chHeat,chCross,chHist,chCEI].filter(Boolean).forEach(c=>c.resize());
+      }
+      forceResizeSoon = ()=> setTimeout(forceResize, 80);
+      window.addEventListener('resize', safe(forceResizeSoon));
+
+      /* === Eventos de filtros === */
       ["f-fecha","f-genero","f-edad","f-zona","f-persona"].forEach(id=>{
         document.getElementById(id).addEventListener('change', safe(()=>{
-          filters.range = +document.getElementById("f-fecha").value;
-          filters.genero = document.getElementById("f-genero").value;
-          filters.edad = document.getElementById("f-edad").value;
-          filters.zona = document.getElementById("f-zona").value;
-          filters.persona = document.getElementById("f-persona").value;
-          saveFilters(filters, true);
-          render(); setTimeout(forceResize, 20);
+          state.range = +document.getElementById("f-fecha").value;
+          state.genero = document.getElementById("f-genero").value;
+          state.edad   = document.getElementById("f-edad").value;
+          state.zona   = document.getElementById("f-zona").value;
+          state.persona= document.getElementById("f-persona").value;
+          render(); forceResizeSoon();
         }));
       });
+
+      // Botón Aplicar: solo cierra y actualiza etiqueta de fecha
+      applyBtn.addEventListener('click', safe(()=>{
+        const r = document.getElementById('f-fecha').value;
+        const map = {7:'Últimos 7 días',14:'Últimos 14 días',30:'Últimos 30 días'};
+        document.getElementById('date-range-label').textContent = map[r] || map[14];
+        closeFilters();
+      }));
+
+      // Reset filtros
+      document.getElementById('btn-reset').addEventListener('click', safe(()=>{
+        state.range=14; state.genero='all'; state.edad='all'; state.zona='all'; state.persona='all';
+        document.getElementById('f-fecha').value='14';
+        document.getElementById('f-genero').value='all';
+        document.getElementById('f-edad').value='all';
+        document.getElementById('f-zona').value='all';
+        document.getElementById('f-persona').value='all';
+        document.getElementById('date-range-label').textContent = 'Últimos 14 días';
+        render(); forceResizeSoon();
+      }));
 
       document.getElementById('btn-export').addEventListener('click', safe(exportCSV));
 
       // Render inicial
-      requestAnimationFrame(safe(()=>{ render(); setTimeout(forceResize, 60); }));
+      requestAnimationFrame(safe(()=>{
+        render();
+        forceResizeSoon();
+      }));
     }));
   })();
   </script>
