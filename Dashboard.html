@@ -193,73 +193,94 @@
     <!-- Overlay general (sidebar izquierda móvil) -->
     <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-    <!-- ===== Sidebar izquierda / Drawer ===== -->
-    <aside class="sidebar mini" id="sidebar" role="navigation" aria-label="Módulos de reportes">
-      <div class="brand">
-        <div class="logo" aria-label="FollowUP">
-          <svg viewBox="0 0 48 48" aria-hidden="true">
-            <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#0f6eea"/><stop offset="1" stop-color="#0a55b6"/></linearGradient></defs>
-            <circle cx="24" cy="24" r="20" fill="url(#g)"/>
-            <path d="M14 26l6 6 14-14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
-          </svg>
-          <strong class="label">FollowUP Reports</strong>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet" />
+<style>
+  .material-symbols-rounded {
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+    font-size: 22px; /* ajusta tamaño según diseño */
+    line-height: 1;
+  }
+</style>
+
+<!-- ===== Sidebar izquierda / Drawer ===== -->
+<aside class="sidebar mini" id="sidebar" role="navigation" aria-label="Módulos de reportes">
+  <div class="brand">
+    <div class="logo" aria-label="FollowUP">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <defs>
+          <linearGradient id="g" x1="0" x2="1">
+            <stop offset="0" stop-color="#0f6eea"/>
+            <stop offset="1" stop-color="#0a55b6"/>
+          </linearGradient>
+        </defs>
+        <circle cx="24" cy="24" r="20" fill="url(#g)"/>
+        <path d="M14 26l6 6 14-14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </svg>
+      <strong class="label">FollowUP Reports</strong>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <ul>
+      <li>
+        <a id="lnk-bienvenida" class="item" href="https://home.fupbi.org/">
+          <span class="icon material-symbols-rounded" aria-hidden="true">home</span>
+          <span class="label">Inicio</span>
+        </a>
+      </li>
+
+      <li class="collapse" id="grp-reportes" aria-expanded="true">
+        <div class="collapse-head" role="button" tabindex="0" aria-controls="panel-reportes" aria-expanded="true">
+          <span class="icon material-symbols-rounded" aria-hidden="true">folder_open</span>
+          <span class="label">Reportes</span>
+          <span class="chev material-symbols-rounded" aria-hidden="true">expand_more</span>
         </div>
-      </div>
-
-      <nav class="nav">
-        <ul>
-          <li>
-            <a id="lnk-bienvenida" class="item" href="https://home.fupbi.org/">
-              <span class="icon" aria-hidden="true">🏠</span>
-              <span class="label">Inicio</span>
-            </a>
-          </li>
-
-          <li class="collapse" id="grp-reportes" aria-expanded="true">
-            <div class="collapse-head" role="button" tabindex="0" aria-controls="panel-reportes" aria-expanded="true">
-              <span class="icon" aria-hidden="true">📑</span>
-              <span class="label">Reportes</span>
-              <span class="chev" aria-hidden="true">❮</span>
-            </div>
-            <div id="panel-reportes" class="panel" role="region" aria-label="Reportes">
-              <ul>
-                <li>
-                  <a class="item" id="lnk-dashboard" href="Dashboard.html" aria-current="page">
-                    <span class="icon" aria-hidden="true">📊</span>
-                    <span class="label">Dashboard</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="item" id="lnk-recorridos" href="Recorridos.html">
-                    <span class="icon" aria-hidden="true">🗺️</span>
-                    <span class="label">Recorridos</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="item" id="lnk-buyer" href="Buyer.html">
-                    <span class="icon" aria-hidden="true">🧑‍🤝‍🧑</span>
-                    <span class="label">Buyer Persona</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="item" id="lnk-staff" href="Staff.html">
-                    <span class="icon" aria-hidden="true">👤</span>
-                    <span class="label">Staff</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="item" id="lnk-comercial" href="Comercial.html">
-                    <span class="icon" aria-hidden="true">📈</span>
-                    <span class="label">Comercial</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </li>
-        </ul>
-      </nav>
-      <div style="margin:auto 10px 10px; opacity:.85; font-size:12px;"><small>Aquí va tu marca</small></div>
-    </aside>
+        <div id="panel-reportes" class="panel" role="region" aria-label="Reportes">
+          <ul>
+            <li>
+              <a class="item" id="lnk-dashboard" href="Dashboard.html" aria-current="page">
+                <span class="icon material-symbols-rounded" aria-hidden="true">space_dashboard</span>
+                <span class="label">Dashboard</span>
+              </a>
+            </li>
+            <li>
+              <a class="item" id="lnk-recorridos" href="Recorridos.html">
+                <span class="icon material-symbols-rounded" aria-hidden="true">map</span>
+                <span class="label">Recorridos</span>
+              </a>
+            </li>
+            <li>
+              <a class="item" id="lnk-buyer" href="Buyer.html">
+                <span class="icon material-symbols-rounded" aria-hidden="true">group</span>
+                <span class="label">Buyer Persona</span>
+              </a>
+            </li>
+            <li>
+              <a class="item" id="lnk-staff" href="Staff.html">
+                <span class="icon material-symbols-rounded" aria-hidden="true">person</span>
+                <span class="label">Staff</span>
+              </a>
+            </li>
+            <li>
+              <a class="item" id="lnk-comercial" href="Comercial.html">
+                <span class="icon material-symbols-rounded" aria-hidden="true">trending_up</span>
+                <span class="label">Comercial</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </nav>
+  <div style="margin:auto 10px 10px; opacity:.85; font-size:12px;">
+    <small>Aquí va tu marca</small>
+  </div>
+</aside>
 
     <!-- ===== Main ===== -->
     <div class="main">
