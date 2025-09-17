@@ -197,62 +197,44 @@
 <!-- HEAD: fuente de Material Symbols + ajustes -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* Material Symbols: usa el color de .nav .icon */
-  .material-symbols-rounded{
-    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
-    font-size: 22px; line-height: 1; display:inline-flex; align-items:center; justify-content:center;
+ /* Material Symbols: base */
+.material-symbols-rounded{
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  font-size:22px; line-height:1;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+
+/* Ítem activo: fondo y texto blancos (ya lo tienes) + icono blanco */
+.nav .item[aria-current="page"],
+.nav .item.active{
+  background:var(--primary-600);
+  color:#fff;
+}
+.nav .item[aria-current="page"] .icon,
+.nav .item.active .icon,
+.nav .item[aria-current="page"] .material-symbols-rounded,
+.nav .item.active .material-symbols-rounded{
+  color:#fff;
+}
+
+/* ===== Solo DESKTOP (>=901px): mini colapsada muestra sólo ícono centrado ===== */
+@media (min-width:901px){
+  .sidebar.mini:not(.hovering) .nav .item{
+    display:flex; align-items:center; justify-content:center;
+    width:48px; height:48px; padding:0;
   }
-/* Asegura que el icono del link activo se vea en blanco */
-    .nav a[aria-current="page"] .material-symbols-rounded {
-      color: #fff;
-    }
-    .nav .item.active .material-symbols-rounded {
-      color: #fff;
-    }
-    .sidebar.mini .nav .item {
-  display: flex;
-  align-items: center;
-  justify-content: center; /* centra horizontal */
-  width: 48px;   /* ancho fijo para el recuadro */
-  height: 48px;  /* alto fijo para el recuadro */
-  padding: 0;    /* elimina padding extra */
+  .sidebar.mini:not(.hovering) .nav .item .label{ display:none; }
 }
 
-/* ===== Sidebar compacto vs expandido ===== */
-
-/* MODO COMPACTO: solo cuando es mini y NO está en hover */
-.sidebar.mini:not(.hovering) .nav .item{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:48px;
-  height:48px;
-  padding:0;
-}
-.sidebar.mini:not(.hovering) .nav .item .label{
-  display:none;
-}
-
-/* MODO EXPANDIDO: mini+hovering o no mini */
-.sidebar.mini.hovering .nav .item,
-.sidebar:not(.mini) .nav .item{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:10px;
-  width:auto;
-  height:var(--nav-item-h);
-  padding:0 6px;
-}
-.sidebar.mini.hovering .nav .item .label,
-.sidebar:not(.mini) .nav .item .label{
-  display:inline;
-}
-
-/* Ícono blanco cuando el link está activo */
-.nav a[aria-current="page"] .material-symbols-rounded,
-.nav .item.active .material-symbols-rounded { color:#fff; }
-inline;
+/* ===== Solo MÓVIL (<=900px): drawer fullscreen con ícono + texto ===== */
+@media (max-width:900px){
+  .sidebar{ width:100vw; min-width:100vw; transform:translateX(-100%); }
+  .sidebar.open{ transform:translateX(0); }
+  .sidebar.mini .nav .item{
+    display:flex; align-items:center; justify-content:flex-start;
+    gap:10px; width:auto; height:var(--nav-item-h); padding:0 6px;
+  }
+  .sidebar.mini .nav .item .label{ display:inline; }
 }
 
 </style>
