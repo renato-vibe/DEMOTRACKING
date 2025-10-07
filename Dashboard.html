@@ -133,8 +133,20 @@
     .exp[open] summary{background:#fbfcff}
     .exp .exp-body{padding:0 18px 16px 18px}
     .field{display:flex; flex-direction:column; gap:6px; margin-top:10px}
+    .field .switch-help{margin:0; font-size:12px}
     label{font-size:12px; color:var(--muted)}
     select{appearance:none; width:100%; padding:12px 12px; border-radius:10px; background:#fff; border:1px solid #e7ecf7; outline:none; color:var(--ink); font-size:14px; min-height:40px;}
+    .toggle{position:relative; display:inline-flex; align-items:center; gap:12px; cursor:pointer; font-weight:600; color:#0b2238;}
+    .toggle input{
+      position:absolute; inset:0;
+      width:44px; height:24px; margin:0;
+      opacity:0; cursor:pointer;
+    }
+    .toggle-track{position:relative; width:44px; height:24px; border-radius:999px; background:#d7deeb; transition:background .2s ease;}
+    .toggle-thumb{position:absolute; inset:2px auto auto 2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,.16); transition:transform .2s ease;}
+    .toggle input:focus-visible + .toggle-track{outline:2px solid var(--focus); outline-offset:2px;}
+    .toggle input:checked + .toggle-track{background:var(--filter-accent);}
+    .toggle input:checked + .toggle-track .toggle-thumb{transform:translateX(20px);}
     .two-grid{display:grid; gap:10px; grid-template-columns:repeat(2,1fr)}
     .filter-actions{
       position:sticky; bottom:0; background:#fff; border-top:1px solid #eaeef4; padding:12px; display:flex; justify-content:space-between; gap:12px;
@@ -465,6 +477,21 @@
           </div>
         </div>
       </details>
+
+      <!-- 6) Comparativa same-store -->
+      <details class="exp" open>
+        <summary>Comparativa ▾</summary>
+        <div class="exp-body">
+          <div class="field">
+            <label class="toggle">
+              <input type="checkbox" id="f-samestore" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span>Activar same-store</span>
+            </label>
+            <p class="muted switch-help">Aplica la variación usando solo las tiendas presentes en ambos periodos.</p>
+          </div>
+        </div>
+      </details>
     </div>
     <div class="filter-actions">
       <button class="btn ghost" id="btn-reset">Restablecer filtros</button>
@@ -588,12 +615,21 @@
       const ages = ["Niño", "Adulto Joven", "Adulto", "Senior"];
       const zones = ["Pasillo","Vitrina","Tienda","Perfumería","Zapatería","Joyería","Carteras","Tane","Caja"];
       const personas = ["Solo","Pareja","Amigos","Familia"];
+      const stores = [
+        { id:"Centro", label:"Flagship Centro", startDay:0 },
+        { id:"Norte", label:"Macro Norte", startDay:0 },
+        { id:"Sur", label:"Macro Sur", startDay:6 },
+        { id:"Plaza", label:"Plaza Express", startDay:14 },
+        { id:"Costanera", label:"Punto Costanera", startDay:20 }
+      ];
       function randomHour(){ const r = rand(); if (r < 0.15) return 10 + Math.floor(rand()*3); if (r < 0.55) return 13 + Math.floor(rand()*3); if (r < 0.80) return 16 + Math.floor(rand()*2); return 18 + Math.floor(rand()*3); }
       const ALL_VISITS = (() => {
         const visits = [];
         for (let d=0; d<30; d++){
           const dayBase = 55 + Math.floor(rand()*65);
           for (let i=0; i<dayBase; i++){
+            const activeStores = stores.filter(s => d >= s.startDay);
+            const store = activeStores[Math.floor(rand()*activeStores.length)];
             const g = genders[Math.floor(rand()*genders.length)];
             const a = ages[Math.floor(Math.pow(rand(), .6)*ages.length)];
             const p = personas[Math.floor(Math.pow(rand(), .85)*personas.length)];
@@ -608,14 +644,14 @@
             }
             const dwell = 7 + Math.round(rand()*26) + (a==="Niño"? -2: a==="Senior"? +3: 0) + (p==="Familia"? +2: 0);
             const startHour = randomHour();
-            visits.push({day:d, hour:startHour, gender:g, age:a, persona:p, path, dwell:Math.max(4,dwell), unique});
+            visits.push({day:d, hour:startHour, gender:g, age:a, persona:p, path, dwell:Math.max(4,dwell), unique, store:store.id});
           }
         }
         return visits;
       })();
 
       const $ = s => document.querySelector(s);
-      const state = { range: 14, genero:"all", edad:"all", zona:"all", persona:"all" };
+      const state = { range: 14, genero:"all", edad:"all", zona:"all", persona:"all", samestore:false };
       const updateChips = () => {
         const chipR = $("#chip-rango"); if (chipR) chipR.textContent = `${state.range} días`;
         const actives = [];
@@ -623,11 +659,13 @@
         if (state.edad!=="all") actives.push(state.edad);
         if (state.zona!=="all") actives.push(state.zona);
         if (state.persona!=="all") actives.push(state.persona);
+        if (state.samestore) actives.push("Same-store");
         const chip = $("#chip-filtros"); if (chip) chip.textContent = actives.length? actives.join(" · "): "Sin filtros";
       };
       function clearFilters(){
-        state.genero = "all"; state.edad = "all"; state.zona = "all"; state.persona = "all";
+        state.genero = "all"; state.edad = "all"; state.zona = "all"; state.persona = "all"; state.samestore = false;
         $("#f-genero").value = "all"; $("#f-edad").value = "all"; $("#f-zona").value = "all"; $("#f-persona").value = "all";
+        $("#f-samestore").checked = false;
         updateChips(); renderDashboard();
       }
       resetBtn.addEventListener('click', safe(clearFilters));
@@ -654,6 +692,34 @@
         chFunnel    = chFunnel    || echarts.init(document.getElementById("ch-funnel"));
       }
 
+      const calcMetrics = (visits) => {
+        const total = visits.length;
+        const uniqueCount = visits.filter(v=>v.unique).length;
+        const dwellSum = visits.reduce((s,v)=>s+v.dwell,0);
+        const avgDwell = total? dwellSum/total : 0;
+        const avgZones = total? visits.reduce((s,v)=> s + new Set(v.path).size,0)/total : 0;
+        const convCount = visits.filter(v=>v.path.includes("Caja")).length;
+        const bounceCount = visits.filter(v=> new Set(v.path).size <= 2).length;
+        const recirCount = visits.filter(v=> v.path.some((z,i,arr)=> i>0 && arr.slice(0,i).includes(z)) ).length;
+        return { total, uniqueCount, avgDwell, avgZones, convCount, bounceCount, recirCount };
+      };
+      const ratio = (count,total) => total? count/total : 0;
+      const percentChange = (curr, prev) => {
+        if (!isFinite(prev) || prev === 0){
+          if (!isFinite(curr) || curr === 0) return 0;
+          return curr > 0 ? 100 : -100;
+        }
+        return ((curr - prev) / prev) * 100;
+      };
+      const formatDelta = (value, invert=false) => {
+        const positive = invert ? value <= 0 : value >= 0;
+        const arrow = positive ? "▲ " : "▼ ";
+        return {
+          text: arrow + Math.abs(value).toFixed(1) + "%",
+          cls: "delta " + (positive ? "up" : "down")
+        };
+      };
+
       function renderDashboard(){
         ensureDashboardCharts();
         const data = getFiltered();
@@ -665,53 +731,88 @@
           (state.persona==="all" || v.persona===state.persona)
         );
 
-        const traficoTotal = data.length, traficoPrev = prev.length || 1;
-        const varTraf = ((traficoTotal-traficoPrev)/traficoPrev*100).toFixed(1);
-        const unicos = data.filter(v=>v.unique).length, unicosPrev = prev.filter(v=>v.unique).length || 1;
-        const varUni = ((unicos-unicosPrev)/unicosPrev*100).toFixed(1);
-        const avgDwell = (data.reduce((s,v)=>s+v.dwell,0)/Math.max(1,data.length)).toFixed(2);
-        const avgPrev = (prev.reduce((s,v)=>s+v.dwell,0)/Math.max(1,prev.length)).toFixed(2);
-        const varDw = (((avgDwell-avgPrev)/avgPrev)*100).toFixed(1);
-        const avgZones = (data.reduce((s,v)=>s+new Set(v.path).size,0)/Math.max(1,data.length)).toFixed(2);
-        const avgZonesPrev = (prev.reduce((s,v)=>s+new Set(v.path).size,0)/Math.max(1,prev.length)).toFixed(2);
-        const varZones = (((avgZones-avgZonesPrev)/avgZonesPrev)*100).toFixed(1);
-        const conv = data.filter(v=>v.path.includes("Caja")).length;
-        const convPrev = prev.filter(v=>v.path.includes("Caja")).length || 1;
-        const convRate = (conv/Math.max(1,traficoTotal)*100).toFixed(1);
-        const convVar = (((conv/Math.max(1,traficoTotal)) - (convPrev/Math.max(1,traficoPrev)))/(convPrev/Math.max(1,traficoPrev))*100).toFixed(1);
-        const bounce = data.filter(v=> new Set(v.path).size <= 2 ).length;
-        const bounceRate = (bounce/Math.max(1,traficoTotal)*100).toFixed(1);
-        const bouncePrev = prev.filter(v=> new Set(v.path).size <= 2 ).length || 1;
-        const bounceVar = (((bounce/Math.max(1,traficoTotal)) - (bouncePrev/Math.max(1,traficoPrev)))/(bouncePrev/Math.max(1,traficoPrev))*100).toFixed(1);
-        const recir = data.filter(v=> v.path.some((z,i,arr)=> i>0 && arr.slice(0,i).includes(z)) ).length;
-        const recirRate = (recir/Math.max(1,traficoTotal)*100).toFixed(1);
-        const recirPrev = prev.filter(v=> v.path.some((z,i,arr)=> i>0 && arr.slice(0,i).includes(z)) ).length || 1;
-        const recirVar = (((recir/Math.max(1,traficoTotal)) - (recirPrev/Math.max(1,traficoPrev)))/(recirPrev/Math.max(1,traficoPrev))*100).toFixed(1);
+        let compareCurr = data;
+        let comparePrev = prev;
+        if (state.samestore){
+          const currStores = new Set(data.map(v=>v.store));
+          const prevStores = new Set(prev.map(v=>v.store));
+          const commonStores = [...currStores].filter(s=>prevStores.has(s));
+          if (commonStores.length){
+            const allowed = new Set(commonStores);
+            compareCurr = data.filter(v=>allowed.has(v.store));
+            comparePrev = prev.filter(v=>allowed.has(v.store));
+          } else {
+            compareCurr = [];
+            comparePrev = [];
+          }
+        }
+
+        const metricsCurrent = calcMetrics(data);
+        const metricsCurrForVar = calcMetrics(compareCurr);
+        const metricsPrevForVar = calcMetrics(comparePrev);
+
+        const traficoTotal = metricsCurrent.total;
+        const unicos = metricsCurrent.uniqueCount;
+        const avgDwell = metricsCurrent.avgDwell;
+        const avgZones = metricsCurrent.avgZones;
+        const convRate = ratio(metricsCurrent.convCount, metricsCurrent.total) * 100;
+        const bounceRate = ratio(metricsCurrent.bounceCount, metricsCurrent.total) * 100;
+        const recirRate = ratio(metricsCurrent.recirCount, metricsCurrent.total) * 100;
+        const convRateDisplay = convRate.toFixed(1);
+        const bounceRateDisplay = bounceRate.toFixed(1);
+        const recirRateDisplay = recirRate.toFixed(1);
+
+        const varTraf = percentChange(metricsCurrForVar.total, metricsPrevForVar.total);
+        const varUni = percentChange(metricsCurrForVar.uniqueCount, metricsPrevForVar.uniqueCount);
+        const varDw = percentChange(metricsCurrForVar.avgDwell, metricsPrevForVar.avgDwell);
+        const varZones = percentChange(metricsCurrForVar.avgZones, metricsPrevForVar.avgZones);
+        const convRateCurr = ratio(metricsCurrForVar.convCount, metricsCurrForVar.total) * 100;
+        const convRatePrev = ratio(metricsPrevForVar.convCount, metricsPrevForVar.total) * 100;
+        const convVar = percentChange(convRateCurr, convRatePrev);
+        const bounceRateCurr = ratio(metricsCurrForVar.bounceCount, metricsCurrForVar.total) * 100;
+        const bounceRatePrev = ratio(metricsPrevForVar.bounceCount, metricsPrevForVar.total) * 100;
+        const bounceVar = percentChange(bounceRateCurr, bounceRatePrev);
+        const recirRateCurr = ratio(metricsCurrForVar.recirCount, metricsCurrForVar.total) * 100;
+        const recirRatePrev = ratio(metricsPrevForVar.recirCount, metricsPrevForVar.total) * 100;
+        const recirVar = percentChange(recirRateCurr, recirRatePrev);
         const byHourCounts = Array.from({length:12}, (_,i)=>({h:10+i, c:0}));
         data.forEach(v=>{ const idx=v.hour-10; if(byHourCounts[idx]) byHourCounts[idx].c++; });
         const peak = byHourCounts.reduce((a,b)=> b.c>a.c? b:a, {h:"–",c:0});
 
         $("#kpi-trafico").textContent = traficoTotal.toLocaleString("es-CL");
-        $("#kpi-trafico-var").textContent = (varTraf>=0? "▲ ":"▼ ") + Math.abs(varTraf)+"%";
-        $("#kpi-trafico-var").className = "delta "+(varTraf>=0? "up":"down");
+        const trafDelta = formatDelta(varTraf);
+        $("#kpi-trafico-var").textContent = trafDelta.text;
+        $("#kpi-trafico-var").className = trafDelta.cls;
+
         $("#kpi-unicos").textContent = unicos.toLocaleString("es-CL");
-        $("#kpi-unicos-var").textContent = (varUni>=0? "▲ ":"▼ ") + Math.abs(varUni)+"%";
-        $("#kpi-unicos-var").className = "delta "+(varUni>=0? "up":"down");
-        $("#kpi-permanencia").textContent = avgDwell+" min";
-        $("#kpi-permanencia-var").textContent = (varDw>=0? "▲ ":"▼ ") + Math.abs(varDw)+"%";
-        $("#kpi-permanencia-var").className = "delta "+(varDw>=0? "up":"down");
-        $("#kpi-zonas").textContent = avgZones;
-        $("#kpi-zonas-var").textContent = (varZones>=0? "▲ ":"▼ ") + Math.abs(varZones)+"%";
-        $("#kpi-zonas-var").className = "delta "+(varZones>=0? "up":"down");
-        $("#kpi-conv-caja").textContent = convRate+"%";
-        $("#kpi-conv-caja-var").textContent = (convVar>=0? "▲ ":"▼ ") + Math.abs(convVar)+"%";
-        $("#kpi-conv-caja-var").className = "delta "+(convVar>=0? "up":"down");
-        $("#kpi-bounce").textContent = bounceRate+"%";
-        $("#kpi-bounce-var").textContent = (bounceVar<=0? "▲ ":"▼ ") + Math.abs(bounceVar)+"%";
-        $("#kpi-bounce-var").className = "delta "+(bounceVar<=0? "up":"down");
-        $("#kpi-recir").textContent = recirRate+"%";
-        $("#kpi-recir-var").textContent = (recirVar>=0? "▲ ":"▼ ") + Math.abs(recirVar)+"%";
-        $("#kpi-recir-var").className = "delta "+(recirVar>=0? "up":"down");
+        const uniDelta = formatDelta(varUni);
+        $("#kpi-unicos-var").textContent = uniDelta.text;
+        $("#kpi-unicos-var").className = uniDelta.cls;
+
+        $("#kpi-permanencia").textContent = avgDwell.toFixed(2)+" min";
+        const dwellDelta = formatDelta(varDw);
+        $("#kpi-permanencia-var").textContent = dwellDelta.text;
+        $("#kpi-permanencia-var").className = dwellDelta.cls;
+
+        $("#kpi-zonas").textContent = avgZones.toFixed(2);
+        const zonesDelta = formatDelta(varZones);
+        $("#kpi-zonas-var").textContent = zonesDelta.text;
+        $("#kpi-zonas-var").className = zonesDelta.cls;
+
+        $("#kpi-conv-caja").textContent = convRateDisplay+"%";
+        const convDelta = formatDelta(convVar);
+        $("#kpi-conv-caja-var").textContent = convDelta.text;
+        $("#kpi-conv-caja-var").className = convDelta.cls;
+
+        $("#kpi-bounce").textContent = bounceRateDisplay+"%";
+        const bounceDelta = formatDelta(bounceVar, true);
+        $("#kpi-bounce-var").textContent = bounceDelta.text;
+        $("#kpi-bounce-var").className = bounceDelta.cls;
+
+        $("#kpi-recir").textContent = recirRateDisplay+"%";
+        const recirDelta = formatDelta(recirVar);
+        $("#kpi-recir-var").textContent = recirDelta.text;
+        $("#kpi-recir-var").className = recirDelta.cls;
         $("#kpi-peak-hour").textContent = peak.h+":00";
         $("#kpi-peak-hour-note").textContent = peak.c? `${peak.c} visitas` : "–";
         $("#kpi-peak-hour-note").className = "delta up";
@@ -751,10 +852,10 @@
         const insights = [];
         const topZone = topZ[0] ? `${topZ[0][0]} (${topZ[0][1]} hits)` : null;
         if (topZone) insights.push(`La zona con mayor interacción es <b>${topZone}</b>.`);
-        insights.push(`La conversión a Caja es <b>${convRate}%</b>${state.zona!=='all'? ' (filtrada por '+state.zona+')':''}.`);
+        insights.push(`La conversión a Caja es <b>${convRateDisplay}%</b>${state.zona!=='all'? ' (filtrada por '+state.zona+')':''}.`);
         insights.push(`Hora pico: <b>${peak.h}:00</b> con <b>${peak.c}</b> visitas.`);
-        insights.push(`Bounce (≤2 zonas): <b>${bounceRate}%</b>.`);
-        insights.push(`Recirculación: <b>${recirculación=recirRate}%</b>`.replace('recirculación','Recirculación'));
+        insights.push(`Bounce (≤2 zonas): <b>${bounceRateDisplay}%</b>.`);
+        insights.push(`Recirculación: <b>${recirRateDisplay}%</b>.`);
         document.getElementById('insights-list').innerHTML = insights.map(x=>`<li>${x}</li>`).join('');
       }
 
@@ -776,13 +877,14 @@
       window.addEventListener('resize', safe(forceResizeSoon));
 
       /* === Eventos de filtros (aplican al cambiar cada select) === */
-      ["f-fecha","f-genero","f-edad","f-zona","f-persona"].forEach(id=>{
+      ["f-fecha","f-genero","f-edad","f-zona","f-persona","f-samestore"].forEach(id=>{
         document.getElementById(id).addEventListener('change', safe(()=>{
           state.range = +document.getElementById("f-fecha").value;
           state.genero = document.getElementById("f-genero").value;
           state.edad = document.getElementById("f-edad").value;
           state.zona = document.getElementById("f-zona").value;
           state.persona = document.getElementById("f-persona").value;
+          state.samestore = document.getElementById("f-samestore").checked;
           updateChips();
           renderDashboard();
           forceResizeSoon();
